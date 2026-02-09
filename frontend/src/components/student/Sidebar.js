@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import DynamicNotification from '../DynamicNotification';
 
-const StudentSidebar = () => {
+const StudentSidebar = ({ setSidebarOpen }) => {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
@@ -44,28 +44,43 @@ const StudentSidebar = () => {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div className="p-5 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          <div className="p-2 bg-blue-600 rounded-lg">
-            <BookOpenIcon className="w-8 h-8 text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <BookOpenIcon className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <motion.h1
+                className="text-xl font-bold text-gray-800"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+              >
+                Peminjaman Buku
+              </motion.h1>
+              <motion.p
+                className="text-xs text-gray-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+              >
+                Portal Siswa
+              </motion.p>
+            </div>
           </div>
-          <div>
-            <motion.h1
-              className="text-xl font-bold text-gray-800"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
+          
+          {/* Close button for mobile */}
+          {setSidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1 rounded-lg hover:bg-gray-100 md:hidden"
+              aria-label="Close sidebar"
             >
-              Peminjaman Buku
-            </motion.h1>
-            <motion.p
-              className="text-xs text-gray-500"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-            >
-              Portal Siswa
-            </motion.p>
-          </div>
+              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
@@ -87,6 +102,7 @@ const StudentSidebar = () => {
                       ? 'bg-primary-100 text-primary-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
+                  onClick={() => setSidebarOpen && setSidebarOpen(false)} // Close sidebar on mobile when clicking link
                 >
                   <IconComponent className="w-5 h-5 mr-3" />
                   <span className="truncate">{item.name}</span>

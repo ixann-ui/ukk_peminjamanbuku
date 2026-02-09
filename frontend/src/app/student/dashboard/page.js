@@ -559,7 +559,110 @@ const StudentDashboard = () => {
                   </motion.button>
                 )}
               </div>
-              <div className="w-full space-y-4 overflow-x-hidden">
+              {/* Desktop Table View */}
+              <div className="hidden md:block w-full overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                      >
+                        Aktivitas
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                      >
+                        Tanggal
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {recentActivities.length > 0 ? (
+                      recentActivities.map((activity) => {
+                        const IconComponent = activity.icon;
+                        const bgColor =
+                          activity.color === "blue"
+                            ? "bg-blue-100"
+                            : activity.color === "red"
+                              ? "bg-red-100"
+                              : "bg-green-100";
+                        const textColor =
+                          activity.color === "blue"
+                            ? "text-blue-600"
+                            : activity.color === "red"
+                              ? "text-red-600"
+                              : "text-green-600";
+
+                        return (
+                          <motion.tr
+                            key={activity.id}
+                            className="hover:bg-gray-50"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${bgColor} ${textColor} mr-3 flex-shrink-0`}
+                                >
+                                  <IconComponent className="w-4 h-4" />
+                                </div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {activity.text}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(activity.date).toLocaleDateString(
+                                "id-ID",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
+                            </td>
+                          </motion.tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="2"
+                          className="px-6 py-12 text-sm text-center text-gray-500"
+                        >
+                          <div className="flex flex-col items-center justify-center">
+                            <svg
+                              className="w-12 h-12 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              ></path>
+                            </svg>
+                            <p className="mt-4 font-medium">Tidak ada aktivitas</p>
+                            <p className="text-gray-500">
+                              Aktivitas akan muncul di sini ketika tersedia
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
                 {recentActivities.length > 0 ? (
                   recentActivities.map((activity) => {
                     const IconComponent = activity.icon;
@@ -579,44 +682,61 @@ const StudentDashboard = () => {
                     return (
                       <motion.div
                         key={activity.id}
-                        className="flex items-center w-full max-w-full p-3 border border-gray-200 rounded-lg"
-                        initial={{ opacity: 0, x: -20 }}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                        initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2 }}
                       >
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${bgColor} ${textColor} mr-3 flex-shrink-0`}
-                        >
-                          <IconComponent className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0 overflow-hidden">
-                          <p className="font-medium truncate">
-                            {activity.text}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate">
-                            {new Date(activity.date).toLocaleDateString(
-                              "id-ID",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </p>
+                        <div className="flex items-start">
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center ${bgColor} ${textColor} mr-3 flex-shrink-0`}
+                          >
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900">
+                              {activity.text}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(activity.date).toLocaleDateString(
+                                "id-ID",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
+                            </p>
+                          </div>
                         </div>
                       </motion.div>
                     );
                   })
                 ) : (
                   <motion.div
-                    className="w-full py-8 text-center text-gray-500"
+                    className="p-8 text-center"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.9, duration: 0.3 }}
                   >
-                    Belum ada aktivitas terbaru
+                    <svg
+                      className="w-12 h-12 text-gray-400 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <p className="mt-4 font-medium text-gray-900">Tidak ada aktivitas</p>
+                    <p className="text-gray-500">
+                      Aktivitas akan muncul di sini ketika tersedia
+                    </p>
                   </motion.div>
                 )}
               </div>

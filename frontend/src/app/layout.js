@@ -11,13 +11,20 @@ const inter = Inter({
 
 export const metadata = {
   title: "Peminjaman buku",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    minimumScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="w-full max-w-full overflow-x-hidden">
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={`${inter.variable} font-sans antialiased w-full max-w-full overflow-x-hidden min-h-screen`}
       >
         <AuthProvider>
           <ClientLayout>
