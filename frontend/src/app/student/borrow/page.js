@@ -156,7 +156,7 @@ const BorrowBooksPage = () => {
     const defaultDueDate = new Date();
     defaultDueDate.setDate(defaultDueDate.getDate() + 14);
     const formattedDate = defaultDueDate.toISOString().split("T")[0];
-    setBorrowForm({ due_date: formattedDate, quantity: 1 });
+    setBorrowForm({ due_date: formattedDate, due_time: "07:00", quantity: 1 });
     // compute max quantity allowed based on availability and student's current active borrows
     (async () => {
       try {
@@ -422,17 +422,19 @@ const BorrowBooksPage = () => {
       </Card>
 
       {/* Show View Receipt button if there's a recent transaction and it's not rejected or overdue */}
-      {borrowedTransaction && borrowedTransaction.status !== "rejected" && borrowedTransaction.status !== "overdue" && (
-        <div className="flex justify-center mt-4">
-          <AnimatedButton
-            onClick={handleViewReceipt}
-            variant="primary"
-            size="md"
-          >
-            Lihat Struk
-          </AnimatedButton>
-        </div>
-      )}
+      {borrowedTransaction &&
+        borrowedTransaction.status !== "rejected" &&
+        borrowedTransaction.status !== "overdue" && (
+          <div className="flex justify-center mt-4">
+            <AnimatedButton
+              onClick={handleViewReceipt}
+              variant="primary"
+              size="md"
+            >
+              Lihat Struk
+            </AnimatedButton>
+          </div>
+        )}
 
       {/* Book Details Modal */}
       <Modal
@@ -491,8 +493,12 @@ const BorrowBooksPage = () => {
                 <p className="text-gray-900">{selectedBook.available_copies}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Jumlah Halaman</p>
-                <p className="text-gray-900">{selectedBook.page_count || "-"}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Jumlah Halaman
+                </p>
+                <p className="text-gray-900">
+                  {selectedBook.page_count || "-"}
+                </p>
               </div>
             </div>
 
@@ -540,10 +546,14 @@ const BorrowBooksPage = () => {
                 Tanggal Ditambahkan
               </p>
               <p className="text-gray-900">
-                {new Date(selectedBook.created_at).toLocaleDateString()}
+                {new Date(selectedBook.created_at).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
               </p>
             </div>
-            
+
             <div className="flex justify-end mt-6">
               <AnimatedButton
                 onClick={() => setShowBookDetailsModal(false)}
@@ -598,7 +608,7 @@ const BorrowBooksPage = () => {
                   id="due_date"
                   name="due_date"
                   type="date"
-                  value={borrowForm.due_date}
+                  value={borrowForm.due_date || ""}
                   onChange={handleInputChange}
                   required
                 />
@@ -614,7 +624,7 @@ const BorrowBooksPage = () => {
                   type="time"
                   id="due_time"
                   name="due_time"
-                  value={borrowForm.due_time}
+                  value={borrowForm.due_time || "07:00"}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded-lg"
                 />

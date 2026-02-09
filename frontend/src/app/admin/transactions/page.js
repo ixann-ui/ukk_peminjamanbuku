@@ -214,11 +214,27 @@ const TransactionsPage = () => {
     if (!transactionToReturn) return;
 
     try {
+      // Check if the transaction is overdue to customize the API call and notification message
+      const isOverdue = transactionToReturn.status === "overdue";
+
+      // Get the current timestamp for the return
+      const currentTime = new Date().toISOString();
+
       const response = await fetch(
         `http://localhost:5000/api/transactions/${transactionToReturn.id}/return`,
         {
           method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          // Send the return timestamp and a flag to indicate if the book was overdue at the time of return
+          // and whether the status should remain overdue
+          body: JSON.stringify({
+            was_overdue: isOverdue,
+            return_timestamp: currentTime,
+            keep_overdue_status: isOverdue, // Keep status as overdue if it was already overdue
+          }),
         },
       );
 
@@ -226,9 +242,13 @@ const TransactionsPage = () => {
         fetchTransactions(); // Refresh the list
 
         // Show success notification
+        const message = isOverdue
+          ? `Buku "${transactionToReturn.book_title}" berhasil ditandai sebagai dikembalikan, namun status tetap terlambat karena melewati tanggal jatuh tempo!`
+          : `Buku "${transactionToReturn.book_title}" berhasil ditandai sebagai dikembalikan!`;
+
         setNotification({
           isVisible: true,
-          message: `Buku "${transactionToReturn.book_title}" berhasil ditandai sebagai dikembalikan!`,
+          message: message,
           type: "success",
         });
       } else {
@@ -520,17 +540,62 @@ const TransactionsPage = () => {
     {
       key: "borrow_date",
       header: "Tanggal Pinjam",
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) =>
+        new Date(value).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
     },
     {
       key: "due_date",
       header: "Tanggal Jatuh Tempo",
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) =>
+        new Date(value).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
     },
     {
       key: "return_date",
       header: "Tanggal Kembali",
-      render: (value) => (value ? new Date(value).toLocaleDateString() : "-"),
+      render: (value) =>
+        value
+          ? new Date(value).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : "-",
+    },
+    {
+      key: "return_time",
+      header: "Jam Kembali",
+      render: (value, row) => {
+        // Show "-" if status is overdue (book hasn't been returned yet) or if no return date
+        if (row.status === "overdue" || !row.return_date) {
+          return "-";
+        }
+        // Extract time from return_date if it exists
+        const date = new Date(row.return_date);
+        const timeString = date.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        // If time is 00:00, it might indicate the backend didn't store the time properly
+        // In this case, show "-" to indicate time is unknown
+        if (timeString === "00:00") {
+          return (
+            <span title="Waktu kembali tidak direkam dengan lengkap oleh sistem">
+              -
+            </span>
+          );
+        }
+
+        return timeString;
+      },
     },
     {
       key: "fine_amount",
@@ -625,7 +690,8 @@ const TransactionsPage = () => {
       onClick: handleReturnBook,
       className: "text-green-600 hover:text-green-900",
       icon: ArrowPathIcon,
-      condition: (transaction) => transaction.status === "borrowed", // Only show for borrowed books
+      condition: (transaction) =>
+        transaction.status === "borrowed" || transaction.status === "overdue", // Show for borrowed and overdue books
     },
     {
       label: "Perpanjang",
@@ -667,8 +733,10 @@ const TransactionsPage = () => {
       },
       className: "text-blue-600 hover:text-blue-900",
       icon: DocumentTextIcon,
+      // Hide the receipt button for rejected transactions and for items that were returned but have a fine (returned late)
       condition: (transaction) =>
-        transaction.status !== "rejected" && transaction.status !== "overdue", // Hide for rejected and overdue transactions
+        transaction.status !== "rejected" &&
+        !(transaction.return_date && Number(transaction.fine_amount) > 0),
     },
   ];
 
@@ -766,9 +834,10 @@ const TransactionsPage = () => {
               <div>
                 <h3 className="font-semibold text-black">Tanggal Pinjam</h3>
                 <p className="text-gray-900">
-                  {new Date(
-                    selectedTransaction.borrow_date,
-                  ).toLocaleDateString()}
+                  {new Date(selectedTransaction.borrow_date).toLocaleDateString(
+                    "id-ID",
+                    { day: "numeric", month: "long", year: "numeric" },
+                  )}
                 </p>
               </div>
               <div>
@@ -776,7 +845,10 @@ const TransactionsPage = () => {
                   Tanggal Jatuh Tempo
                 </h3>
                 <p className="text-gray-900">
-                  {new Date(selectedTransaction.due_date).toLocaleDateString()}
+                  {new Date(selectedTransaction.due_date).toLocaleDateString(
+                    "id-ID",
+                    { day: "numeric", month: "long", year: "numeric" },
+                  )}
                 </p>
               </div>
             </div>
@@ -788,10 +860,41 @@ const TransactionsPage = () => {
                   {selectedTransaction.return_date
                     ? new Date(
                         selectedTransaction.return_date,
-                      ).toLocaleDateString()
+                      ).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
                     : "Belum dikembalikan"}
                 </p>
               </div>
+              <div>
+                <h3 className="font-semibold text-black">Jam Kembali</h3>
+                <p className="text-gray-900">
+                  {selectedTransaction.status === "overdue" ||
+                  !selectedTransaction.return_date
+                    ? "-"
+                    : (() => {
+                        const date = new Date(selectedTransaction.return_date);
+                        const timeString = date.toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+
+                        // If time is 00:00, it might indicate the backend didn't store the time properly
+                        // In this case, show "-" to indicate time is unknown
+                        return timeString === "00:00" ? (
+                          <span title="Waktu kembali tidak direkam dengan lengkap oleh sistem">
+                            -
+                          </span>
+                        ) : (
+                          timeString
+                        );
+                      })()}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <h3 className="font-semibold text-black">Status</h3>
                 <p
@@ -816,6 +919,14 @@ const TransactionsPage = () => {
                         : selectedTransaction.status === "rejected"
                           ? "Ditolak"
                           : "Terlambat"}
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-black">Denda</h3>
+                <p className="text-gray-900">
+                  {selectedTransaction.fine_amount > 0
+                    ? `Rp ${Number(selectedTransaction.fine_amount).toLocaleString("id-ID")}`
+                    : "Rp -"}
                 </p>
               </div>
             </div>
@@ -1039,8 +1150,8 @@ const TransactionsPage = () => {
                 </div>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Biarkan kosong untuk menggunakan tanggal jatuh tempo default
-                (14 hari dari sekarang)
+                Biarkan kosong untuk menggunakan tanggal jatuh tempo default (14
+                hari dari sekarang)
               </p>
 
               <div className="flex justify-end pt-4 space-x-3">

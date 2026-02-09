@@ -129,7 +129,7 @@ const AdminDashboard = () => {
             icon = BookOpenIcon;
             color = "blue";
           } else if (transaction.status === "returned") {
-            activityText = `${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'}`;
+            activityText = `Siswa ${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'}`;
             icon = ArrowPathIcon;
             color = "green";
           } else if (transaction.status === "pending") {
@@ -196,7 +196,7 @@ const AdminDashboard = () => {
           const fineAmount = transaction.fine_amount > 0
             ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
             : "Rp 0";
-          activityText = `${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+          activityText = `Siswa  ${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
           icon = ArrowPathIcon;
           color = "green";
         } else if (action === "overdue") {

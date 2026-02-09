@@ -273,7 +273,12 @@ const UsersPage = () => {
     {
       key: "created_at",
       header: "Tanggal Dibuat",
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) =>
+        new Date(value).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
     },
   ];
 
@@ -358,7 +363,6 @@ const UsersPage = () => {
             </div>
           }
         >
-
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-12 h-12 border-t-2 border-b-2 rounded-full animate-spin border-primary-600"></div>

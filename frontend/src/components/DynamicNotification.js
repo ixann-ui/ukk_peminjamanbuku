@@ -13,7 +13,7 @@ const DynamicNotification = ({ message, type = 'success', isVisible, onClose }) 
         setTimeout(() => {
           onClose();
         }, 300);
-      }, 3000); // Auto-hide after 3 seconds
+      }, 9000); // Auto-hide after 9 seconds
 
       return () => clearTimeout(timer);
     }
@@ -41,12 +41,12 @@ const DynamicNotification = ({ message, type = 'success', isVisible, onClose }) 
     <InformationCircleIcon className={`w-5 h-5 ${iconColor}`} />;
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed z-50 top-4 right-4">
       <div className={`${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-lg transform transition-all duration-500 ease-out flex items-center space-x-2 max-w-sm ${show ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-2'} backdrop-blur-sm`}>
         <div className="flex-shrink-0">
           {icon}
         </div>
-        <span className="font-medium text-sm flex-grow">{message}</span>
+        <span className="flex-grow text-sm font-medium">{message}</span>
         <button
           onClick={onClose}
           className={`${iconColor} hover:opacity-70 focus:outline-none`}

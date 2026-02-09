@@ -56,7 +56,9 @@ const MyBooksPage = () => {
     } else if (activeTab === "overdue") {
       setDisplayedTransactions(
         transactions.filter(
-          (t) => t.status === "overdue" || (t.status === "borrowed" && new Date(t.due_date) < new Date()), // Overdue books
+          (t) =>
+            t.status === "overdue" ||
+            (t.status === "borrowed" && new Date(t.due_date) < new Date()), // Overdue books
         ),
       );
     } else {
@@ -95,20 +97,21 @@ const MyBooksPage = () => {
         }
 
         // Update the transaction in the local state
-        setTransactions(prev => {
-          const exists = prev.some(t => t.id === transaction.id);
+        setTransactions((prev) => {
+          const exists = prev.some((t) => t.id === transaction.id);
           if (exists) {
-            return prev.map(t => t.id === transaction.id ? transaction : t);
+            return prev.map((t) => (t.id === transaction.id ? transaction : t));
           } else {
             return [transaction, ...prev];
           }
         });
 
         // Show notification to user
-        const message = action === "approve"
-          ? `Permintaan peminjaman buku "${transaction.book_title || 'Buku'}" telah disetujui.`
-          : `Permintaan peminjaman buku "${transaction.book_title || 'Buku'}" telah ditolak.`;
-          
+        const message =
+          action === "approve"
+            ? `Permintaan peminjaman buku "${transaction.book_title || "Buku"}" telah disetujui.`
+            : `Permintaan peminjaman buku "${transaction.book_title || "Buku"}" telah ditolak.`;
+
         setNotification({
           isVisible: true,
           message: message,
@@ -136,12 +139,22 @@ const MyBooksPage = () => {
     {
       key: "borrow_date",
       header: "Tanggal Pinjam",
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) =>
+        new Date(value).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
     },
     {
       key: "due_date",
       header: "Tanggal Jatuh Tempo",
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) =>
+        new Date(value).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
     },
     {
       key: "fine_amount",
@@ -181,7 +194,6 @@ const MyBooksPage = () => {
     },
   ];
 
-
   const closeNotification = () => {
     setNotification({ isVisible: false, message: "", type: "success" });
   };
@@ -201,7 +213,8 @@ const MyBooksPage = () => {
             Dipinjam (
             {
               transactions.filter(
-                (t) => t.status === "borrowed" && new Date(t.due_date) >= new Date(),
+                (t) =>
+                  t.status === "borrowed" && new Date(t.due_date) >= new Date(),
               ).length
             }
             )
@@ -217,7 +230,10 @@ const MyBooksPage = () => {
             Terlambat (
             {
               transactions.filter(
-                (t) => t.status === "overdue" || (t.status === "borrowed" && new Date(t.due_date) < new Date()),
+                (t) =>
+                  t.status === "overdue" ||
+                  (t.status === "borrowed" &&
+                    new Date(t.due_date) < new Date()),
               ).length
             }
             )
@@ -251,10 +267,7 @@ const MyBooksPage = () => {
             <div className="w-12 h-12 border-t-2 border-b-2 rounded-full animate-spin border-primary-600"></div>
           </div>
         ) : (
-          <Table
-            columns={columns}
-            data={displayedTransactions}
-          />
+          <Table columns={columns} data={displayedTransactions} />
         )}
       </Card>
 

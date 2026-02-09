@@ -110,9 +110,10 @@ const StudentDashboard = () => {
               icon = ArrowUturnUpIcon;
               color = "green";
             } else if (transaction.status === "overdue") {
-              const fineAmount = transaction.fine_amount > 0
-                ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
-                : "Rp 0";
+              const fineAmount =
+                transaction.fine_amount > 0
+                  ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+                  : "Rp 0";
               activityText = `Terlambat mengembalikan buku: ${transaction.book_title} (Denda: ${fineAmount})`;
               icon = ExclamationTriangleIcon;
               color = "red";
@@ -184,25 +185,27 @@ const StudentDashboard = () => {
         let color = "blue";
 
         if (action === "approve") {
-          activityText = `Permintaan disetujui: ${transaction.book_title || 'Buku'}`;
+          activityText = `Permintaan disetujui: ${transaction.book_title || "Buku"}`;
           icon = ArrowUturnUpIcon;
           color = "green";
         } else if (action === "reject") {
-          activityText = `Permintaan ditolak: ${transaction.book_title || 'Buku'}`;
+          activityText = `Permintaan ditolak: ${transaction.book_title || "Buku"}`;
           icon = TrashIcon;
           color = "red";
         } else if (action === "return") {
-          const fineAmount = transaction.fine_amount > 0
-            ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
-            : "Rp 0";
-          activityText = `Mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+          const fineAmount =
+            transaction.fine_amount > 0
+              ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+              : "Rp 0";
+          activityText = `Mengembalikan buku: ${transaction.book_title || "Buku"} (Denda: ${fineAmount})`;
           icon = ArrowUturnUpIcon;
           color = "green";
         } else if (action === "overdue") {
-          const fineAmount = transaction.fine_amount > 0
-            ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
-            : "Rp 0";
-          activityText = `Terlambat mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+          const fineAmount =
+            transaction.fine_amount > 0
+              ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+              : "Rp 0";
+          activityText = `Terlambat mengembalikan buku: ${transaction.book_title || "Buku"} (Denda: ${fineAmount})`;
           icon = ExclamationTriangleIcon;
           color = "red";
         }
@@ -238,7 +241,8 @@ const StudentDashboard = () => {
         setNotification({
           show: true,
           message: activityText,
-          type: action === "approve" || action === "return" ? "success" : "error",
+          type:
+            action === "approve" || action === "return" ? "success" : "error",
         });
       } catch (err) {
         // ignore
@@ -548,7 +552,7 @@ const StudentDashboard = () => {
                       </>
                     ) : (
                       <>
-                        <TrashIcon className="w-4 h-4 cursor-pointer"/>
+                        <TrashIcon className="w-4 h-4 cursor-pointer" />
                         Bersihkan Aktivitas
                       </>
                     )}

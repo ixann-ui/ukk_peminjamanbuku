@@ -625,16 +625,30 @@ router.put("/:id/return", authenticateToken, (req, res) => {
     }
 
     // Update transaction
-    const returnDate = new Date().toISOString().split("T")[0];
+    // Use provided return timestamp if present (frontend may send), otherwise use current time
+    const providedReturnTimestamp = req.body && req.body.return_timestamp;
+    const returnTimestamp = providedReturnTimestamp
+      ? new Date(providedReturnTimestamp)
+      : new Date();
 
-    // Calculate fine amount
-    const fineAmount = calculateFine(transaction.due_date, returnDate);
+    // Build DB datetime string 'YYYY-MM-DD HH:MM:SS' for storage
+    const yyyy = returnTimestamp.getFullYear();
+    const mm = String(returnTimestamp.getMonth() + 1).padStart(2, "0");
+    const dd = String(returnTimestamp.getDate()).padStart(2, "0");
+    const hh = String(returnTimestamp.getHours()).padStart(2, "0");
+    const min = String(returnTimestamp.getMinutes()).padStart(2, "0");
+    const ss = String(returnTimestamp.getSeconds()).padStart(2, "0");
+    const returnDateTimeForDb = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+
+    // Calculate fine amount using date-only comparison (preserve existing logic)
+    const returnDateOnly = `${yyyy}-${mm}-${dd}`;
+    const fineAmount = calculateFine(transaction.due_date, returnDateOnly);
 
     const updateTransactionQuery =
       "UPDATE transactions SET return_date = ?, status = ?, fine_amount = ? WHERE id = ?";
     db.query(
       updateTransactionQuery,
-      [returnDate, "returned", fineAmount, id],
+      [returnDateTimeForDb, "returned", fineAmount, id],
       (err, result) => {
         if (err) {
           console.error(err);
@@ -731,23 +745,138 @@ router.put(
           return res.status(500).json({ message: "Database error" });
         }
 
-        // Get updated transaction
-        const selectQuery = `
-        SELECT t.*, u.name as user_name, u.email as user_email, u.class as user_class, u.address as user_address, u.nisn as user_nisn, u.phone_number, u.max_borrow_limit, b.title as book_title, b.author as book_author, b.publication_year as book_publication_year
-        FROM transactions t
-        LEFT JOIN users u ON t.user_id = u.id
-        LEFT JOIN books b ON t.book_id = b.id
-        WHERE t.id = ?
-      `;
-        db.query(selectQuery, [id], (err, transactionResult) => {
+        // After updating due date, recalculate fine and status based on today's date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr =
+          today.getFullYear() +
+          "-" +
+          String(today.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(today.getDate()).padStart(2, "0");
+
+        const fineAmount = calculateFine(newDueDateStr, todayStr);
+        const newStatus = fineAmount > 0 ? "overdue" : "borrowed";
+
+        const updateFineQuery =
+          "UPDATE transactions SET fine_amount = ?, status = ? WHERE id = ?";
+        db.query(updateFineQuery, [fineAmount, newStatus, id], (err) => {
           if (err) {
-            console.error(err);
+            console.error(
+              "Error updating fine/status after extending due date:",
+              err,
+            );
             return res.status(500).json({ message: "Database error" });
           }
 
-          res.json({
-            message: `Tanggal jatuh tempo berhasil diperpanjang ${days} hari`,
-            transaction: transactionResult[0],
+          // Get updated transaction
+          const selectQuery = `
+          SELECT t.*, u.name as user_name, u.email as user_email, u.class as user_class, u.address as user_address, u.nisn as user_nisn, u.phone_number, u.max_borrow_limit, b.title as book_title, b.author as book_author, b.publication_year as book_publication_year
+          FROM transactions t
+          LEFT JOIN users u ON t.user_id = u.id
+          LEFT JOIN books b ON t.book_id = b.id
+          WHERE t.id = ?
+        `;
+          db.query(selectQuery, [id], (err, transactionResult) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ message: "Database error" });
+            }
+
+            res.json({
+              message: `Tanggal jatuh tempo berhasil diperpanjang ${days} hari`,
+              transaction: transactionResult[0],
+            });
+          });
+        });
+      });
+    });
+  },
+);
+
+// Admin: update a transaction's due date manually and recalculate fine/status
+router.put(
+  "/:id/update-due-date",
+  authenticateToken,
+  authorizeRole(["admin"]),
+  (req, res) => {
+    const { id } = req.params;
+    const { due_date } = req.body;
+
+    if (!due_date) {
+      return res.status(400).json({ message: "due_date is required" });
+    }
+
+    // Validate date
+    const newDue = new Date(due_date);
+    if (isNaN(newDue.getTime())) {
+      return res.status(400).json({ message: "Invalid due_date format" });
+    }
+
+    const newDueDateStr = newDue.toISOString().split("T")[0];
+
+    // Ensure transaction exists
+    const getTransactionQuery = "SELECT * FROM transactions WHERE id = ?";
+    db.query(getTransactionQuery, [id], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Transaksi tidak ditemukan" });
+      }
+
+      // Update due_date
+      const updateQuery = "UPDATE transactions SET due_date = ? WHERE id = ?";
+      db.query(updateQuery, [newDueDateStr, id], (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "Database error" });
+        }
+
+        // Recalculate fine and status based on today's date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr =
+          today.getFullYear() +
+          "-" +
+          String(today.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(today.getDate()).padStart(2, "0");
+
+        const fineAmount = calculateFine(newDueDateStr, todayStr);
+        const newStatus = fineAmount > 0 ? "overdue" : "borrowed";
+
+        const updateFineQuery =
+          "UPDATE transactions SET fine_amount = ?, status = ? WHERE id = ?";
+        db.query(updateFineQuery, [fineAmount, newStatus, id], (err) => {
+          if (err) {
+            console.error(
+              "Error updating fine/status after due date change:",
+              err,
+            );
+            return res.status(500).json({ message: "Database error" });
+          }
+
+          // Return updated transaction
+          const selectQuery = `
+          SELECT t.*, u.name as user_name, u.email as user_email, u.class as user_class, u.address as user_address, u.nisn as user_nisn, u.phone_number, u.max_borrow_limit, b.title as book_title, b.author as book_author, b.publication_year as book_publication_year
+          FROM transactions t
+          LEFT JOIN users u ON t.user_id = u.id
+          LEFT JOIN books b ON t.book_id = b.id
+          WHERE t.id = ?
+        `;
+          db.query(selectQuery, [id], (err, transactionResult) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ message: "Database error" });
+            }
+
+            res.json({
+              message: "Due date updated and fine/status recalculated",
+              transaction: transactionResult[0],
+            });
           });
         });
       });

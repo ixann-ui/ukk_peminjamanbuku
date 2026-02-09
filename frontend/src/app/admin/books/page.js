@@ -246,7 +246,11 @@ const BooksPage = () => {
         } else if (key === "ebook_link" && isAddingEbook) {
           // Only append ebook link in ebook mode (can be empty)
           formDataToSend.append(key, formData[key] || "");
-        } else if (key !== "cover_image" && key !== "ebook_file" && key !== "ebook_link") {
+        } else if (
+          key !== "cover_image" &&
+          key !== "ebook_file" &&
+          key !== "ebook_link"
+        ) {
           // Append other fields except cover_image, ebook_file, and ebook_link
           if (key === "available_copies") {
             formDataToSend.append(key, parseInt(formData[key]) || 1);
@@ -383,7 +387,12 @@ const BooksPage = () => {
     {
       key: "created_at",
       header: "Tanggal Ditambahkan",
-      render: (value) => new Date(value).toLocaleDateString(),
+      render: (value) =>
+        new Date(value).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
     },
   ];
 
@@ -719,19 +728,21 @@ const BooksPage = () => {
                 </span>
               </div>
 
-              {editingBook && editingBook.ebook_file && !formData.ebook_file && (
-                <div className="mt-2 text-sm text-gray-600">
-                  File e-book saat ini:{" "}
-                  <a
-                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${editingBook.ebook_file}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {editingBook.ebook_file.split("/").pop()}
-                  </a>
-                </div>
-              )}
+              {editingBook &&
+                editingBook.ebook_file &&
+                !formData.ebook_file && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    File e-book saat ini:{" "}
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${editingBook.ebook_file}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {editingBook.ebook_file.split("/").pop()}
+                    </a>
+                  </div>
+                )}
             </div>
           )}
 
@@ -742,7 +753,7 @@ const BooksPage = () => {
                 htmlFor="ebook_link"
                 className="block mb-1 text-sm font-medium text-gray-700"
               >
-                Link E-book Online 
+                Link E-book Online
               </label>
               <input
                 type="url"
@@ -842,8 +853,12 @@ const BooksPage = () => {
                 <p className="text-gray-900">{selectedBook.available_copies}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Jumlah Halaman</p>
-                <p className="text-gray-900">{selectedBook.page_count || "-"}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Jumlah Halaman
+                </p>
+                <p className="text-gray-900">
+                  {selectedBook.page_count || "-"}
+                </p>
               </div>
             </div>
 
@@ -891,7 +906,11 @@ const BooksPage = () => {
                 Tanggal Ditambahkan
               </p>
               <p className="text-gray-900">
-                {new Date(selectedBook.created_at).toLocaleDateString()}
+                {new Date(selectedBook.created_at).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
               </p>
             </div>
           </div>
