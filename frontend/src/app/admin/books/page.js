@@ -361,7 +361,7 @@ const BooksPage = () => {
           <img
             src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${value}`}
             alt="Cover"
-            className="object-cover w-12 mx-auto rounded h-18"
+            className="object-cover w-12 mx-auto square h-18"
           />
         ) : (
           <div className="w-12 aspect-[2/3] mx-auto flex items-center justify-center text-gray-400"></div>
@@ -531,7 +531,7 @@ const BooksPage = () => {
             required
           />
           <InputField
-            label="Penulis"
+            label="Penulis/penerbit"
             id="author"
             name="author"
             value={formData.author}
@@ -683,7 +683,7 @@ const BooksPage = () => {
                       ? "Preview cover baru"
                       : "Current cover"
                   }
-                  className="object-cover h-48 mx-auto border rounded w-36"
+                  className="object-cover h-48 mx-auto border flat w-36"
                   onError={(e) => {
                     e.target.style.display = "none";
                   }}
@@ -812,7 +812,7 @@ const BooksPage = () => {
                 <img
                   src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${selectedBook.cover_image}`}
                   alt={selectedBook.title}
-                  className="object-cover w-48 h-64 border rounded"
+                  className="object-cover w-48 h-64 border flat"
                   onError={(e) => {
                     e.target.style.display = "none";
                   }}
