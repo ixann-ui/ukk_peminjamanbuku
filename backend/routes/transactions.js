@@ -711,7 +711,9 @@ router.put(
   authorizeRole(["admin"]),
   (req, res) => {
     const { id } = req.params;
-    const { days = 7 } = req.body; // Default to 7 days if not specified
+    // Be tolerant: coerce days to number and accept numeric strings
+    const rawDays = req.body && req.body.days;
+    const days = Number(rawDays) || 7; // Default to 7 days if not specified or invalid
 
     // Validate days parameter
     const validDays = [1, 3, 7];
@@ -721,9 +723,9 @@ router.put(
       });
     }
 
-    // Get transaction details
+    // Get transaction details - allow extending if currently borrowed or overdue
     const getTransactionQuery =
-      'SELECT * FROM transactions WHERE id = ? AND status = "borrowed"';
+      "SELECT * FROM transactions WHERE id = ? AND status IN ('borrowed','overdue')";
     db.query(getTransactionQuery, [id], (err, results) => {
       if (err) {
         console.error(err);
@@ -738,10 +740,17 @@ router.put(
 
       const transaction = results[0];
 
+      console.log(
+        `Extending transaction ${id} due_date (${transaction.due_date}) by ${days} days`,
+      );
+
       // Extend due date by specified days
       const newDueDate = new Date(transaction.due_date);
       newDueDate.setDate(newDueDate.getDate() + days);
-      const newDueDateStr = newDueDate.toISOString().split("T")[0];
+      const ny = newDueDate.getFullYear();
+      const nm = String(newDueDate.getMonth() + 1).padStart(2, "0");
+      const nd = String(newDueDate.getDate()).padStart(2, "0");
+      const newDueDateStr = `${ny}-${nm}-${nd}`;
 
       // Update transaction
       const updateQuery = "UPDATE transactions SET due_date = ? WHERE id = ?";
@@ -819,7 +828,10 @@ router.put(
       return res.status(400).json({ message: "Invalid due_date format" });
     }
 
-    const newDueDateStr = newDue.toISOString().split("T")[0];
+    const ny = newDue.getFullYear();
+    const nm = String(newDue.getMonth() + 1).padStart(2, "0");
+    const nd = String(newDue.getDate()).padStart(2, "0");
+    const newDueDateStr = `${ny}-${nm}-${nd}`;
 
     // Ensure transaction exists
     const getTransactionQuery = "SELECT * FROM transactions WHERE id = ?";
