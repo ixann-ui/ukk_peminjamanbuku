@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 09 Feb 2026 pada 08.05
+-- Waktu pembuatan: 09 Feb 2026 pada 16.51
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.1.25
 
@@ -49,13 +49,9 @@ CREATE TABLE `books` (
 --
 
 INSERT INTO `books` (`id`, `title`, `author`, `publication_year`, `isbn`, `category_id`, `available_copies`, `description`, `created_at`, `updated_at`, `cover_image`, `ebook_file`, `ebook_link`, `page_count`) VALUES
-(1, '3726 MDPL', 'Nurwina Sari', '2023', '978-6-2331-0259-9', 9, 165, 'Novel ini mengisahkan tentang Rangga, mahasiswa pecinta alam, yang berjuang mendapatkan hati Andini, mahasiswi berprestasi, selama empat tahun. Cerita berfokus pada dinamika hubungan mereka, termasuk trauma masa lalu Andini, tekanan keluarga, dan persaingan. Pendakian Gunung Rinjani (3.726 mdpl) menjadi metafora perjalanan emosional mereka untuk mendapatkan kebahagiaan dan penyembuhan. ', '2026-01-30 10:58:39', '2026-02-09 06:04:29', '/uploads/book-covers/book-cover-1770457878694-829648125.jpg', NULL, NULL, NULL),
-(9, 'test 1', 'person', '2022', '298298982', 9, 12, 'test 1', '2026-02-06 01:32:09', '2026-02-09 06:00:34', NULL, NULL, NULL, NULL),
-(10, 'test 2', 'person', '2023', '387386363', 3, 9, NULL, '2026-02-06 01:32:35', '2026-02-06 11:38:34', NULL, NULL, NULL, NULL),
-(11, 'test 3', 'person', '2024', '3636363', 11, 11, NULL, '2026-02-06 01:33:09', '2026-02-09 06:03:22', NULL, NULL, NULL, NULL),
-(12, 'test 4', 'person', '2024', '3333333', 5, 9, NULL, '2026-02-06 01:33:36', '2026-02-06 03:10:45', NULL, NULL, NULL, NULL),
-(13, 'test 5', 'person', '2022', '3737373737', 10, 13, NULL, '2026-02-06 01:34:05', '2026-02-06 19:01:48', NULL, NULL, NULL, NULL),
-(14, 'E-book next.js', 'Flavio copes', '0000', NULL, 10, 0, 'e-book test', '2026-02-07 17:40:51', '2026-02-09 06:13:24', '/uploads/book-covers/book-cover-1770486051151-862081552.png', '/uploads/ebooks/ebook-1770486050772-11855079.pdf', 'https://dtc-wsuv.org/dmyers19/dtc477-%20Advanced%20Multimedia%20Authoring/FlavioCopes-Handbooks/The%20Next%20Handbook/book.pdf', 102);
+(1, '3726 MDPL', 'Nurwina Sari', '2023', '978-6-2331-0259-9', 1, 50, 'Novel ini mengisahkan tentang Rangga, mahasiswa pecinta alam, yang berjuang mendapatkan hati Andini, mahasiswi berprestasi, selama empat tahun. Cerita berfokus pada dinamika hubungan mereka, termasuk trauma masa lalu Andini, tekanan keluarga, dan persaingan. Pendakian Gunung Rinjani (3.726 mdpl) menjadi metafora perjalanan emosional mereka untuk mendapatkan kebahagiaan dan penyembuhan. ', '2026-01-30 10:58:39', '2026-02-09 15:45:21', '/uploads/book-covers/book-cover-1770457878694-829648125.jpg', NULL, NULL, 280),
+(2, 'E-book next.js', 'Flavio copes', '0000', NULL, 14, 1, 'e-book test', '2026-02-07 17:40:51', '2026-02-09 14:04:57', '/uploads/book-covers/book-cover-1770486051151-862081552.png', '/uploads/ebooks/ebook-1770486050772-11855079.pdf', 'https://dtc-wsuv.org/dmyers19/dtc477-%20Advanced%20Multimedia%20Authoring/FlavioCopes-Handbooks/The%20Next%20Handbook/book.pdf', 102),
+(3, 'Teknik Fotografi: Belajar dari Basic Hingga Profesional', 'Yayasan Prima Agus Teknik', '2021', '978-6-2361-4110-6', 10, 0, NULL, '2026-02-09 15:44:42', '2026-02-09 15:50:06', '/uploads/book-covers/book-cover-1770651882511-919475781.png', '/uploads/ebooks/ebook-1770651882536-757811440.pdf', 'https://mbc.rri.go.id/ebook/teknik-fotografi-belajar-dari-basic-hingga-profesional/baca#page=1', 89);
 
 -- --------------------------------------------------------
 
@@ -76,15 +72,20 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'Fiksi', 'Sastra fiksi dan novel', '2026-01-20 02:16:03', '2026-01-30 10:54:18'),
-(2, 'Sains', 'Buku ilmiah dan penelitian', '2026-01-20 02:16:03', '2026-01-30 10:54:46'),
-(3, 'Sejarah', 'Catatan sejarah dan biografi', '2026-01-20 02:16:03', '2026-01-30 10:55:08'),
-(4, 'Teknologi', 'Buku-buku ilmu komputer dan teknologi', '2026-01-20 02:16:03', '2026-01-30 10:55:33'),
-(5, 'Komedi', 'Dirancang khusus untuk tertawa, menghibur, dan menyenangkan', '2026-01-20 02:16:03', '2026-01-30 10:57:46'),
-(8, 'Romantis', NULL, '2026-01-20 02:16:03', '2026-01-30 12:01:07'),
-(9, 'Petualangan', NULL, '2026-01-30 12:05:38', '2026-01-30 12:05:38'),
-(10, 'Pelajaran', NULL, '2026-01-30 12:27:28', '2026-01-30 12:27:28'),
-(11, 'Pertanian', 'agrobisnis, pupuk, fermentasi', '2026-02-06 01:25:13', '2026-02-06 01:25:13');
+(1, 'Novel', NULL, '2026-01-20 02:16:03', '2026-02-09 13:38:36'),
+(2, 'Cergam (cerita gambar)', NULL, '2026-01-20 02:16:03', '2026-02-09 13:43:26'),
+(3, 'Komik', NULL, '2026-01-20 02:16:03', '2026-02-09 13:43:38'),
+(4, 'Ensiklopedia', NULL, '2026-01-20 02:16:03', '2026-02-09 13:43:56'),
+(5, 'Nomik (novel komik)', NULL, '2026-01-20 02:16:03', '2026-02-09 13:44:19'),
+(6, 'Antologi', NULL, '2026-01-20 02:16:03', '2026-02-09 13:45:20'),
+(7, 'Dongeng', NULL, '2026-01-30 12:05:38', '2026-02-09 13:47:48'),
+(8, 'Biografi', NULL, '2026-01-30 12:27:28', '2026-02-09 13:49:07'),
+(9, 'Catatan harian', NULL, '2026-02-06 01:25:13', '2026-02-09 13:49:47'),
+(10, 'Fotografi', NULL, '2026-02-09 13:50:05', '2026-02-09 13:56:23'),
+(11, 'Karya ilmiah', NULL, '2026-02-09 13:51:48', '2026-02-09 13:56:36'),
+(12, 'Kamus', NULL, '2026-02-09 13:57:25', '2026-02-09 13:59:50'),
+(13, 'Panduan (how to)', NULL, '2026-02-09 13:59:02', '2026-02-09 13:59:55'),
+(14, 'Buku digital', NULL, '2026-02-09 13:59:26', '2026-02-09 14:00:01');
 
 -- --------------------------------------------------------
 
@@ -99,7 +100,7 @@ CREATE TABLE `transactions` (
   `borrow_date` date NOT NULL,
   `due_date` date NOT NULL,
   `return_date` datetime DEFAULT NULL,
-  `status` enum('borrowed','returned','overdue','pending','rejected','approved') DEFAULT 'borrowed',
+  `status` enum('borrowed','returned','overdue','pending','rejected','approved') NOT NULL DEFAULT 'borrowed',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `fine_amount` decimal(10,2) DEFAULT 0.00,
@@ -111,10 +112,7 @@ CREATE TABLE `transactions` (
 --
 
 INSERT INTO `transactions` (`id`, `user_id`, `book_id`, `borrow_date`, `due_date`, `return_date`, `status`, `created_at`, `updated_at`, `fine_amount`, `quantity`) VALUES
-(40, 9, 1, '2026-02-06', '2026-02-07', '2026-02-09 13:04:29', 'returned', '2026-02-05 19:01:05', '2026-02-09 06:04:29', 2000.00, 5),
-(41, 12, 1, '2026-02-07', '2026-02-08', '2026-02-09 13:03:44', 'returned', '2026-02-06 19:06:25', '2026-02-09 06:03:44', 1000.00, 5),
-(42, 4, 9, '2026-01-01', '2026-01-08', '2026-02-09 13:00:34', 'overdue', '2026-02-06 19:11:34', '2026-02-09 06:06:17', 32000.00, 2),
-(44, 4, 14, '2026-02-09', '2026-02-10', NULL, 'borrowed', '2026-02-09 06:12:35', '2026-02-09 06:13:24', 0.00, 1);
+(54, 12, 3, '2026-02-09', '2026-02-10', NULL, 'borrowed', '2026-02-09 15:50:02', '2026-02-09 15:50:06', 0.00, 1);
 
 -- --------------------------------------------------------
 
@@ -144,6 +142,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `class`, `address`, `created_at`, `updated_at`, `profile_picture`, `nisn`, `phone_number`, `max_borrow_limit`) VALUES
 (1, 'Admin', 'admin@perpus', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', '', NULL, '2026-02-06 12:20:49', '2026-02-06 13:33:37', NULL, NULL, NULL, 0),
+(2, 'admin isan', 'adminisan@perpus', '$2a$10$PkJ4KtTvh0uR.lr9bEZdx.bMc8fjBLd5voTJm3gjDhSPvBOVeH9iO', 'admin', '', '', '2026-02-09 15:04:20', '2026-02-09 15:31:24', NULL, '', '', 5),
 (4, 'ali', 'ali@perpus', '$2a$10$YVrPgPNe8th0DYTnu5W0rOzlh89fo9Iix6Si1hzHCCVT43ECmx5Im', 'student', 'X ikuwes', 'etan kali', '2026-01-20 05:13:24', '2026-02-05 02:41:56', '/uploads/profile-images/4-1769134585456-14417364.jpg', '1919191', '188181881', 5),
 (9, 'itqon', 'itqon@perpus', '$2a$10$.yv0lUwhAEX/4kwnePzEfutAXX3qXZxhZfMUZyDgtJ1Lkj6wRD7N2', 'student', 'XII RPL', 'paleran', '2026-02-06 01:29:59', '2026-02-06 01:29:59', NULL, '3838838383', '39893893', 5),
 (12, 'isan', 'isan@perpus', '$2a$10$7mjwv8byiXkTuyybAHxvv.ZghJ9pv0.slb8WoAvZoOV6MFtMcBnGm', 'student', '12 RPL 2', 'salaans', '2026-02-06 19:06:03', '2026-02-06 19:06:03', NULL, '277277', '37837387', 5);
@@ -191,25 +190,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT untuk tabel `books`
 --
 ALTER TABLE `books`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT untuk tabel `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT untuk tabel `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
