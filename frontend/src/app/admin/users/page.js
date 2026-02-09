@@ -189,7 +189,33 @@ const UsersPage = () => {
       if (editingUser) {
         // For editing, we only send fields that are actually being updated
         // Exclude password from the update payload for security
-        const { password, ...updateData } = formData;
+        const updateData = { ...formData };
+        // If a password is provided on edit, validate and include it
+        if (formData.password) {
+          // Must contain at least one uppercase letter
+          if (!/[A-Z]/.test(formData.password)) {
+            setNotification({
+              isVisible: true,
+              message: "Password harus mengandung setidaknya satu huruf besar",
+              type: "error",
+            });
+            return;
+          }
+          if (formData.password !== formData.confirm_password) {
+            setNotification({
+              isVisible: true,
+              message: "Password dan konfirmasi password tidak cocok",
+              type: "error",
+            });
+            return;
+          }
+          // keep password in payload
+        } else {
+          // Remove password fields if empty or not applicable
+          delete updateData.password;
+          delete updateData.confirm_password;
+        }
+
         response = await fetch(
           `http://localhost:5000/api/users/${editingUser.id}`,
           {
@@ -204,7 +230,20 @@ const UsersPage = () => {
       } else {
         // validate confirm password when creating
         if (formData.password !== formData.confirm_password) {
-          alert("Password dan konfirmasi password tidak cocok");
+          setNotification({
+            isVisible: true,
+            message: "Password dan konfirmasi password tidak cocok",
+            type: "error",
+          });
+          return;
+        }
+        // Enforce uppercase rule for all new users' passwords
+        if (!/[A-Z]/.test(formData.password)) {
+          setNotification({
+            isVisible: true,
+            message: "Password harus mengandung setidaknya satu huruf besar",
+            type: "error",
+          });
           return;
         }
         // Create new user - include password, address, and nisn
@@ -235,7 +274,11 @@ const UsersPage = () => {
         fetchUsers(); // Refresh the list
       } else {
         const errorData = await response.json();
-        alert(errorData.message || "Operation failed");
+        setNotification({
+          isVisible: true,
+          message: errorData.message || "Operation failed",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Error saving user:", error);
@@ -338,19 +381,7 @@ const UsersPage = () => {
         <Card
           title="Kelola Pengguna"
           headerActions={
-            <div className="flex flex-col items-center w-full space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-6">
-              <div className="relative flex-1 max-w-lg">
-                <input
-                  type="text"
-                  placeholder="Cari pengguna..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-                <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
-                  <MagnifyingGlassIcon className="w-5 h-5" />
-                </div>
-              </div>
+            <div className="flex items-center">
               <AnimatedButton
                 onClick={handleAddUser}
                 variant="primary"
@@ -363,6 +394,19 @@ const UsersPage = () => {
             </div>
           }
         >
+          <div className="relative max-w-md mb-4">
+            <input
+              type="text"
+              placeholder="Cari pengguna..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
+              <MagnifyingGlassIcon className="w-5 h-5" />
+            </div>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-12 h-12 border-t-2 border-b-2 rounded-full animate-spin border-primary-600"></div>
@@ -399,7 +443,7 @@ const UsersPage = () => {
               placeholder="Masukkan email pengguna"
               required
             />
-            {!editingUser && (
+            <>
               <InputField
                 label="Password"
                 id="password"
@@ -410,11 +454,13 @@ const UsersPage = () => {
                 onToggleShow={() => setShowPassword((s) => !s)}
                 value={formData.password || ""}
                 onChange={handleChange}
-                placeholder="Masukkan password pengguna"
-                required={!editingUser} // Password is required only when creating new users
+                placeholder={
+                  editingUser
+                    ? "Kosongkan jika tidak ingin mengubah password"
+                    : "Masukkan password pengguna"
+                }
+                required={!editingUser} // required only on create
               />
-            )}
-            {!editingUser && (
               <InputField
                 label="Konfirmasi Password"
                 id="confirm_password"
@@ -425,10 +471,14 @@ const UsersPage = () => {
                 onToggleShow={() => setShowConfirmPassword((s) => !s)}
                 value={formData.confirm_password || ""}
                 onChange={handleChange}
-                placeholder="Konfirmasi password pengguna"
+                placeholder={
+                  editingUser
+                    ? "Konfirmasi password baru"
+                    : "Konfirmasi password pengguna"
+                }
                 required={!editingUser}
               />
-            )}
+            </>
             <div className="mb-4">
               <label
                 htmlFor="role"
@@ -444,6 +494,13 @@ const UsersPage = () => {
                   </div>
                 </>
               ) : isAdding && roleParam === "student" ? (
+                <>
+                  <input type="hidden" name="role" value="student" />
+                  <div className="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-200 rounded-lg">
+                    Siswa
+                  </div>
+                </>
+              ) : editingUser && formData.role === "student" ? (
                 <>
                   <input type="hidden" name="role" value="student" />
                   <div className="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-200 rounded-lg">

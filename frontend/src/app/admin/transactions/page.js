@@ -823,8 +823,8 @@ const TransactionsPage = () => {
       <Card
         title="Kelola Transaksi"
         headerActions={
-          <div className="flex flex-col items-center w-full space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-6">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center w-full space-x-4">
+            <div className="flex items-center">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -838,30 +838,33 @@ const TransactionsPage = () => {
                 <option value="overdue">Terlambat</option>
               </select>
             </div>
-            <div className="relative flex-1 max-w-lg">
-              <input
-                type="text"
-                placeholder="Cari transaksi..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-              <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
-                <MagnifyingGlassIcon className="w-5 h-5" />
-              </div>
+            <div className="ml-auto">
+              <AnimatedButton
+                onClick={handleOpenAddForm}
+                variant="primary"
+                size="md"
+                className="flex items-center min-w-[100px]"
+              >
+                <PlusCircleIcon className="w-5 h-5 mr-2 cursor-pointer" />
+                Tambah Transaksi
+              </AnimatedButton>
             </div>
-            <AnimatedButton
-              onClick={handleOpenAddForm}
-              variant="primary"
-              size="md"
-              className="flex items-center min-w-[100px]"
-            >
-              <PlusCircleIcon className="w-5 h-5 mr-2 cursor-pointer" />
-              Tambah Transaksi
-            </AnimatedButton>
           </div>
         }
       >
+        <div className="relative max-w-md mb-4">
+          <input
+            type="text"
+            placeholder="Cari transaksi..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+          <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
+            <MagnifyingGlassIcon className="w-5 h-5" />
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-12 h-12 border-t-2 border-b-2 rounded-full animate-spin border-primary-600"></div>

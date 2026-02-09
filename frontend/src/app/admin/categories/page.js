@@ -47,7 +47,7 @@ const CategoriesPage = () => {
   const fetchCategories = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/categories?search=${debouncedSearchTerm}&sort_by=id&sort_order=ASC`,
+        `http://localhost:5000/api/categories?search=${debouncedSearchTerm}&limit=100&sort_by=id&sort_order=ASC`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -226,7 +226,7 @@ const CategoriesPage = () => {
     },
     {
       key: "created_at",
-      header: "Tanggal Dibuat",
+      header: "Tanggal Ditambahkan",
       render: (value) =>
         new Date(value).toLocaleDateString("id-ID", {
           day: "numeric",
@@ -254,21 +254,9 @@ const CategoriesPage = () => {
   return (
     <div className="space-y-6">
       <Card
-        title="Kelola Kategori"
+        title="Kelola Kategori Buku"
         headerActions={
-          <div className="flex flex-col items-center w-full space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-6">
-            <div className="relative flex-1 max-w-lg">
-              <input
-                type="text"
-                placeholder="Cari kategori..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-              <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
-                <MagnifyingGlassIcon className="w-5 h-5" />
-              </div>
-            </div>
+          <div className="flex items-center">
             <AnimatedButton
               onClick={handleAddCategory}
               variant="primary"
@@ -281,6 +269,19 @@ const CategoriesPage = () => {
           </div>
         }
       >
+        <div className="relative max-w-md mb-4">
+          <input
+            type="text"
+            placeholder="Cari kategori..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+          <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
+            <MagnifyingGlassIcon className="w-5 h-5" />
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-12 h-12 border-t-2 border-b-2 rounded-full animate-spin border-primary-600"></div>

@@ -378,7 +378,7 @@ const BorrowBooksPage = () => {
       <Card
         title="Pinjam Buku"
         headerActions={
-          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3">
+          <div className="flex items-center">
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -391,21 +391,22 @@ const BorrowBooksPage = () => {
                 </option>
               ))}
             </select>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Cari buku..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:w-auto"
-              />
-              <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
-                <MagnifyingGlassIcon className="w-5 h-5" />
-              </div>
-            </div>
           </div>
         }
       >
+        <div className="relative max-w-md mb-4">
+          <input
+            type="text"
+            placeholder="Cari buku..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:w-auto"
+          />
+          <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
+            <MagnifyingGlassIcon className="w-5 h-5" />
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-12 h-12 border-t-2 border-b-2 rounded-full animate-spin border-primary-600"></div>

@@ -12,6 +12,7 @@ import {
   BanknotesIcon,
   RectangleStackIcon,
   ExclamationTriangleIcon,
+  CheckBadgeIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import DynamicNotification from "../../../components/DynamicNotification";
@@ -392,7 +393,7 @@ const AdminDashboard = () => {
     {
       title: "Peminjaman Aktif",
       value: stats.activeBorrows,
-      icon: ArrowPathIcon,
+      icon: CheckBadgeIcon,
       color: "bg-purple-500",
     },
     {
@@ -639,7 +640,7 @@ const AdminDashboard = () => {
                                 "id-ID",
                                 {
                                   year: "numeric",
-                                  month: "short",
+                                  month: "long",
                                   day: "numeric",
                                 },
                               )}
@@ -723,7 +724,7 @@ const AdminDashboard = () => {
                                 "id-ID",
                                 {
                                   year: "numeric",
-                                  month: "short",
+                                  month: "long",
                                   day: "numeric",
                                 },
                               )}

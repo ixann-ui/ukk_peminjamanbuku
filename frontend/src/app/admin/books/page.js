@@ -101,9 +101,12 @@ const BooksPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/categories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/categories?limit=100&sort_by=id&sort_order=ASC",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const data = await response.json();
       setCategories(data.categories || []);
     } catch (error) {

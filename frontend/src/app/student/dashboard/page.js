@@ -634,7 +634,7 @@ const StudentDashboard = () => {
                                 "id-ID",
                                 {
                                   year: "numeric",
-                                  month: "short",
+                                  month: "long",
                                   day: "numeric",
                                 },
                               )}

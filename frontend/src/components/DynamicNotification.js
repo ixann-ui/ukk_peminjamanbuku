@@ -13,7 +13,7 @@ const DynamicNotification = ({ message, type = 'success', isVisible, onClose }) 
         setTimeout(() => {
           onClose();
         }, 300);
-      }, 9000); // Auto-hide after 9 seconds
+      }, 7000); // Auto-hide after 7 seconds
 
       return () => clearTimeout(timer);
     }
