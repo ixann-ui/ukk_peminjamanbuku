@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { LockClosedIcon, EnvelopeIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon, EnvelopeIcon, BookOpenIcon, ChevronLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -49,11 +50,21 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-slate-50 to-slate-100">
       <motion.div
-        className="w-full max-w-md overflow-hidden border shadow-lg bg-card rounded-2xl border-border"
+        className="w-full max-w-md overflow-hidden border shadow-lg bg-card rounded-2xl border-border relative"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
+        {/* Back button */}
+        <Link
+          href="/landing"
+          className="absolute top-4 left-4 flex items-center p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors z-10 shadow-sm"
+          aria-label="Kembali ke halaman utama"
+        >
+          <ChevronLeftIcon className="h-5 w-5 text-primary-600 mr-1" />
+          <span className="text-primary-600 text-sm font-medium">Kembali</span>
+        </Link>
+
         {/* Header with logo */}
         <div className="p-8 text-center bg-gradient-to-r from-primary to-indigo-600">
           <div className="flex justify-center mb-4">
@@ -103,18 +114,26 @@ export default function LoginPage() {
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full py-3 pl-12 pr-4 transition-all duration-200 border rounded-lg border-input focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background hover:border-primary/30"
+                className="w-full py-3 pl-12 pr-12 transition-all duration-200 border rounded-lg border-input focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background hover:border-primary/30"
                 placeholder="Masukkan kata sandi Anda"
               />
               <div className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2">
                 <LockClosedIcon className="w-5 h-5" />
               </div>
+              <button
+                type="button"
+                className="absolute text-gray-400 transform -translate-y-1/2 right-4 top-1/2 focus:outline-none"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+              >
+                {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 

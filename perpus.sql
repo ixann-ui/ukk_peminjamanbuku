@@ -36,6 +36,7 @@ CREATE TABLE `books` (
   `category_id` int(11) DEFAULT NULL,
   `available_copies` int(11) NOT NULL DEFAULT 1,
   `description` text DEFAULT NULL,
+  `cover_image` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -90,6 +91,7 @@ CREATE TABLE `transactions` (
   `due_date` date NOT NULL,
   `return_date` date DEFAULT NULL,
   `status` enum('borrowed','returned','overdue') DEFAULT 'borrowed',
+  `fine_amount` decimal(10,2) DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -98,8 +100,8 @@ CREATE TABLE `transactions` (
 -- Dumping data for table `transactions`
 --
 
-INSERT INTO `transactions` (`id`, `user_id`, `book_id`, `borrow_date`, `due_date`, `return_date`, `status`, `created_at`, `updated_at`) VALUES
-(9, 8, 1, '2026-01-30', '2026-01-31', '2026-01-30', 'returned', '2026-01-30 12:27:52', '2026-01-30 18:33:28');
+INSERT INTO `transactions` (`id`, `user_id`, `book_id`, `borrow_date`, `due_date`, `return_date`, `status`, `fine_amount`, `created_at`, `updated_at`) VALUES
+(9, 8, 1, '2026-01-30', '2026-01-31', '2026-01-30', 'returned', 0.00, '2026-01-30 12:27:52', '2026-01-30 18:33:28');
 
 -- --------------------------------------------------------
 
@@ -118,17 +120,19 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `profile_picture` varchar(255) DEFAULT NULL,
-  `nisn` varchar(20) DEFAULT NULL
+  `nisn` varchar(20) DEFAULT NULL,
+  `phone_number` varchar(15) DEFAULT NULL,
+  `max_borrow_limit` int(11) DEFAULT 5
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `class`, `address`, `created_at`, `updated_at`, `profile_picture`, `nisn`) VALUES
-(1, 'Admin', 'admin@perpus', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', '', NULL, '2026-01-20 02:16:03', '2026-01-30 10:50:27', NULL, NULL),
-(4, 'ali', 'ali@perpus', '$2a$10$YVrPgPNe8th0DYTnu5W0rOzlh89fo9Iix6Si1hzHCCVT43ECmx5Im', 'student', 'X ikuwes', 'etan kali', '2026-01-20 05:13:24', '2026-01-30 18:23:22', '/uploads/profile-images/4-1769134585456-14417364.jpg', '1919191'),
-(8, 'fahmi ikhsan', 'fahmiikhsan@perpus', '$2a$10$2h4aQOsJzkMrkWl4ixCKW.qtW/H7Ij3wwbdfZ3XOMGkdxoLf/X9Pe', 'student', '12 RPL 2', 'Semboro Lor', '2026-01-30 12:26:18', '2026-01-30 18:24:38', '/uploads/profile-images/8-1769776172768-149630203.jpg', '22222');
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `class`, `address`, `created_at`, `updated_at`, `profile_picture`, `nisn`, `phone_number`, `max_borrow_limit`) VALUES
+(1, 'Admin', 'admin@perpus', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', '', NULL, '2026-01-20 02:16:03', '2026-01-30 10:50:27', NULL, NULL, NULL, 5),
+(4, 'ali', 'ali@perpus', '$2a$10$YVrPgPNe8th0DYTnu5W0rOzlh89fo9Iix6Si1hzHCCVT43ECmx5Im', 'student', 'X ikuwes', 'etan kali', '2026-01-20 05:13:24', '2026-01-30 18:23:22', '/uploads/profile-images/4-1769134585456-14417364.jpg', '1919191', NULL, 5),
+(8, 'fahmi ikhsan', 'fahmiikhsan@perpus', '$2a$10$2h4aQOsJzkMrkWl4ixCKW.qtW/H7Ij3wwbdfZ3XOMGkdxoLf/X9Pe', 'student', '12 RPL 2', 'Semboro Lor', '2026-01-30 12:26:18', '2026-01-30 18:24:38', '/uploads/profile-images/8-1769776172768-149630203.jpg', '22222', NULL, 5);
 
 --
 -- Indexes for dumped tables

@@ -20,7 +20,6 @@ const StudentSidebar = () => {
     { name: 'Profil Saya', href: '/student/profile', icon: IdentificationIcon },
     { name: 'Buku Saya', href: '/student/my-books', icon: BookOpenIcon },
     { name: 'Pinjam Buku', href: '/student/borrow', icon: BookmarkSquareIcon },
-    { name: 'Kembalikan Buku', href: '/student/return', icon: ArrowUturnUpIcon },
   ];
 
   const handleLogoutClick = () => {
@@ -45,11 +44,13 @@ const StudentSidebar = () => {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div className="p-5 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <BookOpenIcon className="w-8 h-8 text-primary-700" />
+        <div className="flex items-center space-x-4">
+          <div className="p-2 bg-blue-600 rounded-lg">
+            <BookOpenIcon className="w-8 h-8 text-white" />
+          </div>
           <div>
             <motion.h1
-              className="text-xl font-bold text-primary-700"
+              className="text-xl font-bold text-gray-800"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.3 }}

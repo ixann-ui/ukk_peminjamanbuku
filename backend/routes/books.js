@@ -2,6 +2,138 @@
 const express = require('express');
 const db = require('../config/database');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for file uploads
+const coverStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/book-covers/';
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'book-cover-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Configure storage for e-book files
+const ebookStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/ebooks/';
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'ebook-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Configure storage for both cover and ebook
+const combinedStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.fieldname === 'cover_image') {
+      const dir = 'uploads/book-covers/';
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      cb(null, dir);
+    } else if (file.fieldname === 'ebook_file') {
+      const dir = 'uploads/ebooks/';
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      cb(null, dir);
+    } else {
+      const dir = 'uploads/book-covers/'; // default
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      cb(null, dir);
+    }
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    if (file.fieldname === 'ebook_file') {
+      cb(null, 'ebook-' + uniqueSuffix + path.extname(file.originalname));
+    } else {
+      cb(null, 'book-cover-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  }
+});
+
+const coverUpload = multer({
+  storage: coverStorage,
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // Limit file size to 5MB
+  }
+});
+
+const ebookUpload = multer({
+  storage: ebookStorage,
+  fileFilter: (req, file, cb) => {
+    // Accept only PDF files for e-books
+    if (file.mimetype === 'application/pdf' || file.originalname.endsWith('.pdf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed for e-books!'), false);
+    }
+  },
+  limits: {
+    fileSize: 50 * 1024 * 1024 // Limit file size to 50MB for e-books
+  }
+});
+
+const combinedUpload = multer({
+  storage: combinedStorage,
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'cover_image') {
+      // Accept only image files for cover
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed for cover!'), false);
+      }
+    } else if (file.fieldname === 'ebook_file') {
+      // Accept only PDF files for e-books
+      if (file.mimetype === 'application/pdf' || file.originalname.endsWith('.pdf')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF files are allowed for e-books!'), false);
+      }
+    } else {
+      // Default to image files
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    }
+  },
+  limits: {
+    fileSize: 50 * 1024 * 1024 // Limit file size to 50MB for e-books
+  }
+});
 
 const router = express.Router();
 
@@ -11,7 +143,7 @@ router.get('/', authenticateToken, (req, res) => {
   const offset = (page - 1) * limit;
 
   let query = `
-    SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.description, b.created_at, b.updated_at, c.name as category_name
+    SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.page_count, b.description, b.cover_image, b.ebook_file, b.ebook_link, b.created_at, b.updated_at, c.name as category_name
     FROM books b
     LEFT JOIN categories c ON b.category_id = c.id
     WHERE 1=1
@@ -76,7 +208,7 @@ router.get('/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
   const query = `
-    SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.description, b.created_at, b.updated_at, c.name as category_name
+    SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.page_count, b.description, b.cover_image, b.ebook_file, b.ebook_link, b.created_at, b.updated_at, c.name as category_name
     FROM books b
     LEFT JOIN categories c ON b.category_id = c.id
     WHERE b.id = ?
@@ -97,8 +229,10 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // Create new book (admin only)
-router.post('/', authenticateToken, authorizeRole(['admin']), (req, res) => {
-  const { title, author, publication_year, isbn, category_id, description } = req.body;
+router.post('/', authenticateToken, authorizeRole(['admin']), combinedUpload.fields([{ name: 'cover_image', maxCount: 1 }, { name: 'ebook_file', maxCount: 1 }]), (req, res) => {
+  const { title, author, publication_year, isbn, category_id, description, ebook_link, page_count } = req.body;
+  const coverImage = req.files['cover_image'] ? `/uploads/book-covers/${req.files['cover_image'][0].filename}` : null;
+  const ebookFile = req.files['ebook_file'] ? `/uploads/ebooks/${req.files['ebook_file'][0].filename}` : null;
 
   // Validate required fields
   if (!title || !author) {
@@ -119,18 +253,18 @@ router.post('/', authenticateToken, authorizeRole(['admin']), (req, res) => {
       }
 
       // Insert new book
-      insertBook(req, res);
+      insertBook(req, res, coverImage, ebookFile, ebook_link);
     });
   } else {
-    insertBook(req, res);
+    insertBook(req, res, coverImage, ebookFile, ebook_link);
   }
 });
 
-function insertBook(req, res) {
-  const { title, author, publication_year, isbn, category_id, description } = req.body;
+function insertBook(req, res, coverImage, ebookFile, ebookLink) {
+  const { title, author, publication_year, isbn, category_id, description, ebook_link, page_count } = req.body;
 
-  const query = 'INSERT INTO books (title, author, publication_year, isbn, category_id, available_copies, description) VALUES (?, ?, ?, ?, ?, ?, ?)';
-  const params = [title, author, publication_year !== undefined && publication_year !== null && publication_year !== '' ? publication_year.toString() : null, isbn || null, category_id || null, 1, description || null];
+  const query = 'INSERT INTO books (title, author, publication_year, isbn, category_id, available_copies, page_count, description, cover_image, ebook_file, ebook_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  const params = [title, author, publication_year !== undefined && publication_year !== null && publication_year !== '' ? publication_year.toString() : null, isbn || null, category_id || null, 1, page_count || null, description || null, coverImage || null, ebookFile || null, ebookLink || null];
 
   db.query(query, params, (err, result) => {
     if (err) {
@@ -140,7 +274,7 @@ function insertBook(req, res) {
 
     // Get the created book
     const selectQuery = `
-      SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.description, b.created_at, b.updated_at, c.name as category_name
+      SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.page_count, b.description, b.cover_image, b.ebook_file, b.ebook_link, b.created_at, b.updated_at, c.name as category_name
       FROM books b
       LEFT JOIN categories c ON b.category_id = c.id
       WHERE b.id = ?
@@ -160,12 +294,14 @@ function insertBook(req, res) {
 }
 
 // Update book (admin only)
-router.put('/:id', authenticateToken, authorizeRole(['admin']), (req, res) => {
+router.put('/:id', authenticateToken, authorizeRole(['admin']), combinedUpload.fields([{ name: 'cover_image', maxCount: 1 }, { name: 'ebook_file', maxCount: 1 }]), (req, res) => {
   const { id } = req.params;
-  const { title, author, publication_year, isbn, category_id, available_copies, description } = req.body;
+  const { title, author, publication_year, isbn, category_id, available_copies, description, ebook_link, page_count } = req.body;
+  const coverImage = req.files && req.files['cover_image'] ? `/uploads/book-covers/${req.files['cover_image'][0].filename}` : null;
+  const ebookFile = req.files && req.files['ebook_file'] ? `/uploads/ebooks/${req.files['ebook_file'][0].filename}` : null;
 
   // Check if book exists
-  const checkQuery = 'SELECT id, available_copies FROM books WHERE id = ?';
+  const checkQuery = 'SELECT id, available_copies, cover_image, ebook_file FROM books WHERE id = ?';
   db.query(checkQuery, [id], (err, results) => {
     if (err) {
       console.error(err);
@@ -191,17 +327,17 @@ router.put('/:id', authenticateToken, authorizeRole(['admin']), (req, res) => {
           return res.status(400).json({ message: 'ISBN sudah digunakan oleh buku lain' });
         }
 
-        updateBook(req, res, existingBook);
+        updateBook(req, res, existingBook, coverImage, ebookFile, ebook_link);
       });
     } else {
-      updateBook(req, res, existingBook);
+      updateBook(req, res, existingBook, coverImage, ebookFile, ebook_link);
     }
   });
 });
 
-function updateBook(req, res, existingBook) {
+function updateBook(req, res, existingBook, coverImage, ebookFile, ebookLink) {
   const { id } = req.params;
-  const { title, author, publication_year, isbn, category_id, available_copies, description } = req.body;
+  const { title, author, publication_year, isbn, category_id, available_copies, description, page_count } = req.body;
 
   let updateFields = [];
   let params = [];
@@ -234,6 +370,28 @@ function updateBook(req, res, existingBook) {
     updateFields.push('description = ?');
     params.push(description || null);
   }
+  if (page_count !== undefined) {
+    updateFields.push('page_count = ?');
+    params.push(page_count || null);
+  }
+
+  // Handle cover image update
+  if (coverImage) {
+    updateFields.push('cover_image = ?');
+    params.push(coverImage);
+  }
+
+  // Handle ebook file update
+  if (ebookFile) {
+    updateFields.push('ebook_file = ?');
+    params.push(ebookFile);
+  }
+
+  // Handle ebook link update
+  if (ebookLink !== undefined) {
+    updateFields.push('ebook_link = ?');
+    params.push(ebookLink || null);
+  }
 
   if (updateFields.length === 0) {
     return res.status(400).json({ message: 'Tidak ada bidang yang diperbarui' });
@@ -250,7 +408,7 @@ function updateBook(req, res, existingBook) {
 
     // Get updated book
     const selectQuery = `
-      SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.description, b.created_at, b.updated_at, c.name as category_name
+      SELECT b.id, b.title, b.author, b.publication_year, b.isbn, b.category_id, b.available_copies, b.page_count, b.description, b.cover_image, b.ebook_file, b.ebook_link, b.created_at, b.updated_at, c.name as category_name
       FROM books b
       LEFT JOIN categories c ON b.category_id = c.id
       WHERE b.id = ?

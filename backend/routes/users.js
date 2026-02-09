@@ -18,12 +18,12 @@ router.get('/', authenticateToken, authorizeRole(['admin']), (req, res) => {
   const sortBy = validSortBy.includes(sort_by) ? sort_by : 'created_at';
   const sortOrder = validSortOrder.includes(sort_order.toUpperCase()) ? sort_order.toUpperCase() : 'DESC';
 
-  let query = 'SELECT id, name, email, role, class, address, nisn, profile_picture, created_at FROM users WHERE 1=1';
+  let query = 'SELECT id, name, email, role, class, address, nisn, phone_number, max_borrow_limit, profile_picture, created_at FROM users WHERE 1=1';
   const params = [];
 
   if (search) {
-    query += ' AND (name LIKE ? OR email LIKE ? OR nisn LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    query += ' AND (name LIKE ? OR email LIKE ? OR nisn LIKE ? OR phone_number LIKE ?)';
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
   }
 
   if (role) {
@@ -45,8 +45,8 @@ router.get('/', authenticateToken, authorizeRole(['admin']), (req, res) => {
     const countParams = [];
 
     if (search) {
-      countQuery += ' AND (name LIKE ? OR email LIKE ? OR nisn LIKE ?)';
-      countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      countQuery += ' AND (name LIKE ? OR email LIKE ? OR nisn LIKE ? OR phone_number LIKE ?)';
+      countParams.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     if (role) {
@@ -83,7 +83,7 @@ router.get('/:id', authenticateToken, (req, res) => {
     return res.status(403).json({ message: 'Access denied' });
   }
 
-  const query = 'SELECT id, name, email, role, class, address, nisn, profile_picture, created_at, updated_at FROM users WHERE id = ?';
+  const query = 'SELECT id, name, email, role, class, address, nisn, phone_number, max_borrow_limit, profile_picture, created_at, updated_at FROM users WHERE id = ?';
   db.query(query, [id], (err, results) => {
     if (err) {
       console.error(err);
@@ -101,7 +101,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 // Create new user (admin only)
 router.post('/', authenticateToken, authorizeRole(['admin']), async (req, res) => {
   try {
-    const { name, email, password, role = 'student', class: studentClass, address, nisn } = req.body;
+    const { name, email, password, role = 'student', class: studentClass, address, nisn, phone_number, max_borrow_limit = 5 } = req.body;
 
     // Validate required fields
     if (!name || !email || !password) {
@@ -124,15 +124,15 @@ router.post('/', authenticateToken, authorizeRole(['admin']), async (req, res) =
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Insert new user
-      const insertQuery = 'INSERT INTO users (name, email, password, role, class, address, nisn) VALUES (?, ?, ?, ?, ?, ?, ?)';
-      db.query(insertQuery, [name, email, hashedPassword, role, studentClass, address, nisn], (err, result) => {
+      const insertQuery = 'INSERT INTO users (name, email, password, role, class, address, nisn, phone_number, max_borrow_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      db.query(insertQuery, [name, email, hashedPassword, role, studentClass, address, nisn, phone_number, max_borrow_limit], (err, result) => {
         if (err) {
           console.error(err);
           return res.status(500).json({ message: 'Database error' });
         }
 
         // Get the created user
-        const selectQuery = 'SELECT id, name, email, role, class, address, nisn, profile_picture, created_at FROM users WHERE id = ?';
+        const selectQuery = 'SELECT id, name, email, role, class, address, nisn, phone_number, max_borrow_limit, profile_picture, created_at FROM users WHERE id = ?';
         db.query(selectQuery, [result.insertId], (err, userResult) => {
           if (err) {
             console.error(err);
@@ -165,7 +165,7 @@ const queryPromise = (query, params) => {
 // Update user (admin can update any user, regular user can only update their own profile)
 router.put('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { name, email, password, role, class: studentClass, address, nisn } = req.body;
+  const { name, email, password, role, class: studentClass, address, nisn, phone_number, max_borrow_limit } = req.body;
 
   try {
     // Check permissions
@@ -235,6 +235,20 @@ router.put('/:id', authenticateToken, async (req, res) => {
         updateFields.push('nisn = ?');
         params.push(nisn);
       }
+      if (phone_number !== undefined) {
+        updateFields.push('phone_number = ?');
+        params.push(phone_number);
+      }
+      if (max_borrow_limit !== undefined) {
+        updateFields.push('max_borrow_limit = ?');
+        params.push(max_borrow_limit);
+      }
+    } else {
+      // Allow students to update their own phone number
+      if (phone_number !== undefined) {
+        updateFields.push('phone_number = ?');
+        params.push(phone_number);
+      }
     }
 
     if (updateFields.length === 0) {
@@ -248,7 +262,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     await queryPromise(updateQuery, params);
 
     // Get updated user
-    const selectQuery = 'SELECT id, name, email, role, class, address, nisn, profile_picture, created_at, updated_at FROM users WHERE id = ?';
+    const selectQuery = 'SELECT id, name, email, role, class, address, nisn, phone_number, max_borrow_limit, profile_picture, created_at, updated_at FROM users WHERE id = ?';
     const userResult = await queryPromise(selectQuery, [id]);
 
     res.json({
@@ -313,7 +327,7 @@ router.post('/:id/upload-profile-image', authenticateToken, upload.single('profi
     }
 
     if (!req.file) {
-      return res.status(400).json({ message: 'Tidak ada file gambar yang disediakan' });
+      // return res.status(400).json({ message: 'Tidak ada file gambar yang disediakan' });
     }
 
     // Update the user's profile image in the database

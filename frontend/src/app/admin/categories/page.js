@@ -1,18 +1,23 @@
 // app/admin/categories/page.js
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { useDebounce } from '../../../hooks/useDebounce';
-import Card from '../../../components/Card';
-import Table from '../../../components/Table';
-import Modal from '../../../components/Modal';
-import InputField from '../../../components/InputField';
-import ConfirmationCheckbox from '../../../components/ConfirmationCheckbox';
-import DynamicNotification from '../../../components/DynamicNotification';
-import { PencilIcon, TrashIcon, PlusCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
-import AnimatedButton from '../../../components/AnimatedButton';
+import { useState, useEffect } from "react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useDebounce } from "../../../hooks/useDebounce";
+import Card from "../../../components/Card";
+import Table from "../../../components/Table";
+import Modal from "../../../components/Modal";
+import InputField from "../../../components/InputField";
+import ConfirmationCheckbox from "../../../components/ConfirmationCheckbox";
+import DynamicNotification from "../../../components/DynamicNotification";
+import {
+  PencilIcon,
+  TrashIcon,
+  PlusCircleIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import AnimatedButton from "../../../components/AnimatedButton";
 
 const CategoriesPage = () => {
   const { token } = useAuth();
@@ -21,13 +26,17 @@ const CategoriesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: ''
+    name: "",
+    description: "",
   });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
-  const [notification, setNotification] = useState({ isVisible: false, message: '', type: 'success' });
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    message: "",
+    type: "success",
+  });
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -37,13 +46,16 @@ const CategoriesPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/categories?search=${debouncedSearchTerm}&sort_by=id&sort_order=ASC`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/categories?search=${debouncedSearchTerm}&sort_by=id&sort_order=ASC`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const data = await response.json();
       setCategories(data.categories || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     } finally {
       setLoading(false);
     }
@@ -52,8 +64,8 @@ const CategoriesPage = () => {
   const handleAddCategory = () => {
     setEditingCategory(null);
     setFormData({
-      name: '',
-      description: ''
+      name: "",
+      description: "",
     });
     setShowModal(true);
   };
@@ -62,7 +74,7 @@ const CategoriesPage = () => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description || ''
+      description: category.description || "",
     });
     setShowModal(true);
   };
@@ -76,10 +88,13 @@ const CategoriesPage = () => {
     if (!categoryToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/categories/${categoryToDelete.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/categories/${categoryToDelete.id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (response.ok) {
         fetchCategories(); // Refresh the list
@@ -88,7 +103,7 @@ const CategoriesPage = () => {
         setNotification({
           isVisible: true,
           message: `Kategori "${categoryToDelete.name}" berhasil dihapus!`,
-          type: 'success'
+          type: "success",
         });
       } else {
         const errorData = await response.json();
@@ -96,18 +111,18 @@ const CategoriesPage = () => {
         // Show error notification
         setNotification({
           isVisible: true,
-          message: errorData.message || 'Gagal menghapus kategori',
-          type: 'error'
+          message: errorData.message || "Gagal menghapus kategori",
+          type: "error",
         });
       }
     } catch (error) {
-      console.error('Error deleting category:', error);
+      console.error("Error deleting category:", error);
 
       // Show error notification
       setNotification({
         isVisible: true,
-        message: 'Terjadi kesalahan saat menghapus kategori',
-        type: 'error'
+        message: "Terjadi kesalahan saat menghapus kategori",
+        type: "error",
       });
     }
 
@@ -128,31 +143,34 @@ const CategoriesPage = () => {
       let response;
       if (editingCategory) {
         // Update existing category
-        response = await fetch(`http://localhost:5000/api/categories/${editingCategory.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+        response = await fetch(
+          `http://localhost:5000/api/categories/${editingCategory.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(formData),
           },
-          body: JSON.stringify(formData)
-        });
+        );
       } else {
         // Create new category
-        response = await fetch('http://localhost:5000/api/categories', {
-          method: 'POST',
+        response = await fetch("http://localhost:5000/api/categories", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(formData),
         });
       }
 
       if (response.ok) {
         setShowModal(false);
         setFormData({
-          name: '',
-          description: ''
+          name: "",
+          description: "",
         });
         fetchCategories(); // Refresh the list
 
@@ -162,7 +180,7 @@ const CategoriesPage = () => {
           message: editingCategory
             ? `Kategori "${formData.name}" berhasil diperbarui!`
             : `Kategori "${formData.name}" berhasil ditambahkan!`,
-          type: 'success'
+          type: "success",
         });
       } else {
         const errorData = await response.json();
@@ -170,50 +188,62 @@ const CategoriesPage = () => {
         // Show error notification
         setNotification({
           isVisible: true,
-          message: errorData.message || (editingCategory ? 'Gagal memperbarui kategori' : 'Gagal menambahkan kategori'),
-          type: 'error'
+          message:
+            errorData.message ||
+            (editingCategory
+              ? "Gagal memperbarui kategori"
+              : "Gagal menambahkan kategori"),
+          type: "error",
         });
       }
     } catch (error) {
-      console.error('Error saving category:', error);
+      console.error("Error saving category:", error);
 
       // Show error notification
       setNotification({
         isVisible: true,
-        message: 'Terjadi kesalahan saat menyimpan kategori',
-        type: 'error'
+        message: "Terjadi kesalahan saat menyimpan kategori",
+        type: "error",
       });
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const columns = [
-    { key: 'id', header: 'ID' },
-    { key: 'name', header: 'Nama' },
-    { key: 'description', header: 'Deskripsi', render: (value) => value || '-' },
-    { key: 'created_at', header: 'Tanggal Dibuat', render: (value) => new Date(value).toLocaleDateString() }
+    { key: "id", header: "ID" },
+    { key: "name", header: "Nama" },
+    {
+      key: "description",
+      header: "Deskripsi",
+      render: (value) => value || "-",
+    },
+    {
+      key: "created_at",
+      header: "Tanggal Dibuat",
+      render: (value) => new Date(value).toLocaleDateString(),
+    },
   ];
 
   const actions = [
     {
-      label: 'Edit',
+      label: "Edit",
       onClick: handleEditCategory,
-      className: 'text-blue-600 hover:text-blue-900',
-      icon: PencilIcon
+      className: "text-blue-600 hover:text-blue-900",
+      icon: PencilIcon,
     },
     {
-      label: 'Hapus',
+      label: "Hapus",
       onClick: handleDeleteCategory,
-      className: 'text-red-600 hover:text-red-900',
-      icon: TrashIcon
-    }
+      className: "text-red-600 hover:text-red-900",
+      icon: TrashIcon,
+    },
   ];
 
   return (
@@ -221,29 +251,32 @@ const CategoriesPage = () => {
       <Card
         title="Kelola Kategori"
         headerActions={
-          <AnimatedButton
-            onClick={handleAddCategory}
-            variant="success"
-            size="md"
-          >
-            <PlusCircleIcon className="w-5 h-7 mr-2" />
-            Tambah Kategori
-          </AnimatedButton>
+          <div className="flex flex-col items-center w-full space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-6">
+            <div className="relative flex-1 max-w-lg">
+              <input
+                type="text"
+                placeholder="Cari kategori..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full py-3 pl-12 pr-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              />
+              <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
+                <MagnifyingGlassIcon className="w-5 h-5" />
+              </div>
+            </div>
+            <AnimatedButton
+              onClick={handleAddCategory}
+              variant="primary"
+              size="md"
+              className="flex items-center min-w-[100px]"
+            >
+              <PlusCircleIcon className="w-5 h-5 mr-2 cursor-pointer" />
+              Tambah Kategori
+            </AnimatedButton>
+          </div>
         }
       >
-        <div className="relative mb-4">
-          <input
-            type="text"
-            placeholder="Cari kategori..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 md:w-1/3 bg-white shadow-sm"
-          />
-          <div className="absolute text-gray-500 transform -translate-y-1/2 left-4 top-1/2">
-            <MagnifyingGlassIcon className="w-5 h-5" />
-          </div>
-        </div>
-
+        
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-12 h-12 border-t-2 border-b-2 rounded-full animate-spin border-primary-600"></div>
@@ -253,7 +286,11 @@ const CategoriesPage = () => {
         )}
       </Card>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingCategory ? 'Edit Kategori' : 'Tambah Kategori'}>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingCategory ? "Edit Kategori" : "Tambah Kategori"}
+      >
         <form onSubmit={handleSubmit}>
           <InputField
             label="Nama"
@@ -265,7 +302,10 @@ const CategoriesPage = () => {
             required
           />
           <div className="mb-4">
-            <label htmlFor="description" className="block mb-1 text-sm font-medium text-gray-700">
+            <label
+              htmlFor="description"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
               Deskripsi
             </label>
             <textarea
@@ -283,17 +323,13 @@ const CategoriesPage = () => {
             <AnimatedButton
               type="button"
               onClick={() => setShowModal(false)}
-              variant="outline"
+              variant="danger"
               size="md"
             >
               Batal
             </AnimatedButton>
-            <AnimatedButton
-              type="submit"
-              variant="success"
-              size="md"
-            >
-              {editingCategory ? 'Simpan' : 'Buat'}
+            <AnimatedButton type="submit" variant="primary" size="md">
+              {editingCategory ? "Simpan" : "Buat"}
             </AnimatedButton>
           </div>
         </form>
@@ -314,7 +350,9 @@ const CategoriesPage = () => {
         message={notification.message}
         type={notification.type}
         isVisible={notification.isVisible}
-        onClose={() => setNotification({ isVisible: false, message: '', type: 'success' })}
+        onClose={() =>
+          setNotification({ isVisible: false, message: "", type: "success" })
+        }
       />
     </div>
   );

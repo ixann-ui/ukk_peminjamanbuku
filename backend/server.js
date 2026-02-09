@@ -11,6 +11,22 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+// Ensure upload directories exist
+const fs = require('fs');
+const path = require('path');
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Create book-covers directory if it doesn't exist
+const bookCoversDir = path.join(uploadsDir, 'book-covers');
+if (!fs.existsSync(bookCoversDir)) {
+  fs.mkdirSync(bookCoversDir, { recursive: true });
+}
+
 // Database connection
 const db = require('./config/database');
 

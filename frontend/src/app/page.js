@@ -18,8 +18,8 @@ export default function Home() {
           router.push('/student/dashboard');
         }
       } else {
-        // Redirect to login if not authenticated
-        router.push('/login');
+        // Redirect to landing page if not authenticated
+        router.push('/landing');
       }
     }
   }, [user, loading, router]);

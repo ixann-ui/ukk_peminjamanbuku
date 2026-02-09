@@ -26,13 +26,39 @@ const Receipt = ({ transaction, onClose }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // Convert to local date to preserve the original time
+    const date = new Date(dateString);
+    
+    // Extract individual components
+    const day = date.getDate();
+    const monthNames = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    // Format: DD MMMM YYYY pukul HH.mm
+    return `${day} ${month} ${year} pukul ${hours}.${minutes}`;
+  };
+
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'borrowed':
+        return 'Dipinjam';
+      case 'returned':
+        return 'Dikembalikan';
+      case 'pending':
+        return 'Menunggu Persetujuan';
+      case 'rejected':
+        return 'Ditolak';
+      case 'overdue':
+        return 'Terlambat';
+      default:
+        return status || 'N/A';
+    }
   };
 
   const handleClose = () => {
@@ -47,24 +73,20 @@ const Receipt = ({ transaction, onClose }) => {
       // Dynamically import jsPDF and qrcode
       const jsPDF = (await import('jspdf')).default;
 
-      // Generate QR code containing the full receipt text (optimized for QR)
-      const receiptText = `PEMINJAMAN BUKU'
-
-ID: #${normalizedTransaction.id ? normalizedTransaction.id.toString().padStart(6, '0') : 'N/A'}
-Tgl: ${formatDate(normalizedTransaction.created_at)}
-
+      // Determine receipt type based on status
+      const isReturned = normalizedTransaction.status === 'returned';
+      const receiptType = isReturned ? 'PENGEMBALIAN BUKU' : 'PEMINJAMAN BUKU';
+      
+      // Generate QR code containing a simple transaction identifier
+      const qrData = `Transaksi ID: #${normalizedTransaction.id ? normalizedTransaction.id.toString().padStart(6, '0') : 'N/A'}
 Peminjam: ${normalizedTransaction.user_name || 'N/A'}
+NISN: ${normalizedTransaction.user_nisn || 'N/A'}
 Kelas: ${normalizedTransaction.user_class || 'N/A'}
 Alamat: ${normalizedTransaction.user_address || 'N/A'}
-NISN: ${normalizedTransaction.user_nisn || 'N/A'}
 Buku: ${normalizedTransaction.book_title || 'N/A'}
-Penulis: ${normalizedTransaction.book_author || 'N/A'}
-
-Pinjam: ${formatDate(normalizedTransaction.borrow_date)}
-Jatuh Tempo: ${formatDate(normalizedTransaction.due_date)}
-
-Harap kembalikan buku sesuai tanggal jatuh tempo.`;
-      const qrData = receiptText;
+${isReturned ? `Tanggal Dikembalikan: ${formatDate(normalizedTransaction.return_date)}` : `Tanggal Pinjam: ${formatDate(normalizedTransaction.borrow_date)}`}
+Tanggal Jatuh Tempo: ${formatDate(normalizedTransaction.due_date)}
+Status: ${getStatusDisplay(normalizedTransaction.status)}`;
 
       // Use a library to generate QR code as data URL
       const QRCode = await import('qrcode');
@@ -93,49 +115,51 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.`;
       const margin = 6; // Reduced margin to maximize content width
 
       // Title
-      doc.setFontSize(12);
-      doc.text('PEMINJAMAN BUKU', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 5;
+      doc.setFontSize(10); // Reduced font size
+      doc.text(receiptType, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 6; // Reduced spacing
 
       // Separator
       doc.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 4;
+      yPos += 4; // Reduced spacing
 
       // Header
-      doc.setFontSize(10);
-      doc.text('STRUK PEMINJAMAN BUKU', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 6;
+      doc.setFontSize(9); // Reduced font size
+      doc.text(isReturned ? 'STRUK PENGEMBALIAN BUKU' : 'STRUK PEMINJAMAN BUKU', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 6; // Reduced spacing
 
       // Separator
       doc.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 4;
+      yPos += 4; // Reduced spacing
 
       // Transaction info
       doc.setFontSize(8); // Reduced font size for better fit
       doc.text(`ID Transaksi: #${normalizedTransaction.id ? normalizedTransaction.id.toString().padStart(6, '0') : 'N/A'}`, margin, yPos, { maxWidth: pageWidth - (margin * 2) });
-      yPos += 4;
-      doc.text(`Tanggal Pinjam: ${formatDate(normalizedTransaction.created_at)}`, margin, yPos, { maxWidth: pageWidth - (margin * 2) });
+      yPos += 4; // Reduced spacing
+      doc.text(`Tanggal ${isReturned ? 'Kembali' : 'Pinjam'}: ${formatDate(isReturned ? normalizedTransaction.return_date : normalizedTransaction.created_at)}`, margin, yPos, { maxWidth: pageWidth - (margin * 2) });
+      yPos += 4; // Reduced spacing
+      doc.text(`Status: ${getStatusDisplay(normalizedTransaction.status)}`, margin, yPos, { maxWidth: pageWidth - (margin * 2) });
       yPos += 5; // Reduced spacing
 
       // Borrower info
       doc.setFontSize(8); // Reduced font size for better fit
       doc.text('Peminjam:', margin, yPos);
-      yPos += 4;
+      yPos += 4; // Reduced spacing
       doc.text(`Nama: ${normalizedTransaction.user_name || 'N/A'}`, margin + 4, yPos);
-      yPos += 4;
+      yPos += 3; // Reduced spacing
       doc.text(`Kelas: ${normalizedTransaction.user_class || 'N/A'}`, margin + 4, yPos);
-      yPos += 4;
+      yPos += 3; // Reduced spacing
       doc.text(`Alamat: ${normalizedTransaction.user_address || 'N/A'}`, margin + 4, yPos);
-      yPos += 4;
+      yPos += 3; // Reduced spacing
       doc.text(`NISN: ${normalizedTransaction.user_nisn || 'N/A'}`, margin + 4, yPos);
       yPos += 5; // Reduced spacing
 
       // Book info
       doc.setFontSize(8); // Reduced font size for better fit
       doc.text('Buku:', margin, yPos);
-      yPos += 4;
+      yPos += 4; // Reduced spacing
       doc.text(`Judul: ${normalizedTransaction.book_title || 'N/A'}`, margin + 4, yPos);
-      yPos += 4;
+      yPos += 3; // Reduced spacing
       doc.text(`Penulis: ${normalizedTransaction.book_author || 'N/A'}`, margin + 4, yPos);
       yPos += 5; // Reduced spacing
 
@@ -149,33 +173,32 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.`;
 
       // Add due date with proper wrapping
       doc.text(dueDateLabel, margin, yPos, { maxWidth: maxLineWidth });
-      yPos += 5; // Increased spacing for better readability
+      yPos += 5; // Reduced spacing for better readability
 
       // Add return date if available
       if (returnDateLabel) {
         doc.text(returnDateLabel, margin, yPos, { maxWidth: maxLineWidth });
-        yPos += 4; // Adequate spacing
+        yPos += 4; // Reduced spacing
       } else {
-        yPos += 4; // Adequate spacing
+        yPos += 4; // Reduced spacing
       }
 
       // Separator
       doc.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 4;
+      yPos += 4; // Reduced spacing after separator
 
       // Footer
       doc.setFontSize(8);
-      doc.text('Harap kembalikan buku tepat waktu.', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 4;
+      doc.text(isReturned ? 'Buku telah dikembalikan.' : 'Harap kembalikan buku tepat waktu.', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 8; // Reduced spacing
 
       // Add QR code
-      yPos += 6;
-      const qrSize = 25; // Size of QR code in mm
+      const qrSize = 18; // Further reduced size of QR code in mm to ensure it fits
       const qrX = (pageWidth - qrSize) / 2; // Center the QR code
 
       // Add QR code to PDF
       doc.addImage(dataUrl, 'PNG', qrX, yPos, qrSize, qrSize);
-      yPos += qrSize + 8; // Move position below QR code with more spacing
+      yPos += qrSize + 6; // Reduced spacing after QR code
 
       // Add QR code label
       doc.setFontSize(8);
@@ -200,14 +223,18 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.`;
       console.error('Error generating receipt PDF:', error);
 
       // Fallback: create a simple text file if PDF generation fails
+      const isReturned = normalizedTransaction.status === 'returned';
+      const receiptType = isReturned ? 'PENGEMBALIAN BUKU' : 'PEMINJAMAN BUKU';
+      
       const receiptContent = `
-PEMINJAMAN BUKU
+${receiptType}
 
 ========================================
-           STRUK PEMINJAMAN BUKU
+           STRUK ${isReturned ? 'PENGEMBALIAN' : 'PEMINJAMAN'} BUKU
 ========================================
 ID Transaksi: #${normalizedTransaction.id ? normalizedTransaction.id.toString().padStart(6, '0') : 'N/A'}
-Tanggal pinjam: ${formatDate(normalizedTransaction.created_at)}
+Tanggal ${isReturned ? 'Kembali' : 'Pinjam'}: ${formatDate(isReturned ? normalizedTransaction.return_date : normalizedTransaction.created_at)}
+Status: ${getStatusDisplay(normalizedTransaction.status)}
 
 Informasi Peminjam:
 Nama: ${normalizedTransaction.user_name || 'N/A'}
@@ -216,8 +243,10 @@ Email: ${normalizedTransaction.user_email || 'N/A'}
 Detail Buku:
 Judul: ${normalizedTransaction.book_title || 'N/A'}
 Penulis: ${normalizedTransaction.book_author || 'N/A'}
+Tanggal Jatuh Tempo: ${formatDate(normalizedTransaction.due_date)}
+${isReturned ? `Tanggal Kembali: ${formatDate(normalizedTransaction.return_date)}` : ''}
 ========================================
-Harap kembalikan buku sesuai tanggal jatuh tempo.
+${isReturned ? 'Buku telah dikembalikan.' : 'Harap kembalikan buku sesuai tanggal jatuh tempo.'}
 ========================================
       `;
 
@@ -225,7 +254,7 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `struk_peminjaman_${normalizedTransaction.id || 'unknown'}.txt`;
+      a.download = `struk_${isReturned ? 'pengembalian' : 'peminjaman'}_${normalizedTransaction.id || 'unknown'}.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -233,13 +262,19 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.
     }
   };
 
+  // Determine if transaction is returned
+  const isReturned = normalizedTransaction.status === 'returned';
+  const receiptTitle = isReturned ? 'Struk Pengembalian Buku' : 'Struk Peminjaman Buku';
+  const receiptHeader = isReturned ? 'PENGEMBALIAN BUKU' : 'PEMINJAMAN BUKU';
+  const footerText = isReturned ? 'Buku telah dikembalikan.' : 'Harap kembalikan buku sesuai tanggal jatuh tempo.';
+
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-transparent bg-opacity-50tambahka ${isClosing ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
       <div className={`relative w-full max-w-md overflow-hidden bg-white rounded-lg shadow-xl ${isClosing ? 'animate-scaleOut' : 'animate-scaleIn'}`}>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">
-              Struk Peminjaman Buku
+              {receiptTitle}
             </h3>
             <button
               type="button"
@@ -254,7 +289,7 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.
 
           <div className="p-6 border border-gray-300 rounded-lg bg-gray-50">
             <div className="mb-4 text-center">
-              <h2 className="text-xl font-bold">PEMINJAMAN BUKU</h2>
+              <h2 className="text-xl font-bold">{receiptHeader}</h2>
             </div>
 
             <div className="py-3 my-4 border-t border-b border-gray-300">
@@ -264,8 +299,12 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.
                   <p className="text-gray-700">#{normalizedTransaction.id ? normalizedTransaction.id.toString().padStart(6, '0') : 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="font-medium">Tanggal pinjam:</p>
-                  <p className="text-gray-700">{formatDate(normalizedTransaction.created_at)}</p>
+                  <p className="font-medium">Tanggal {isReturned ? 'Kembali' : 'Pinjam'}:</p>
+                  <p className="text-gray-700">{formatDate(isReturned ? normalizedTransaction.return_date : normalizedTransaction.created_at)}</p>
+                </div>
+                <div>
+                  <p className="font-medium">Status:</p>
+                  <p className="text-gray-700">{getStatusDisplay(normalizedTransaction.status)}</p>
                 </div>
               </div>
             </div>
@@ -287,10 +326,10 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.
                 <p className="break-words whitespace-normal"><span className="font-medium">Penulis:</span> {normalizedTransaction.book_author || 'N/A'}</p>
               </div>
             </div>
-            
+
             <div className="pt-4 mt-6 border-t border-gray-300">
               <p className="text-xs text-center text-black">
-                Harap kembalikan buku sesuai tanggal jatuh tempo.
+                {footerText}
               </p>
             </div>
           </div>
@@ -308,7 +347,7 @@ Harap kembalikan buku sesuai tanggal jatuh tempo.
           <button
             type="button"
             onClick={handleClose}
-            className="inline-flex justify-center px-4 py-2 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex justify-center px-4 py-2 text-base font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             Tutup
           </button>

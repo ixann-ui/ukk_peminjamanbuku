@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { UserIcon, EnvelopeIcon, LockClosedIcon, AcademicCapIcon, UsersIcon} from '@heroicons/react/24/outline';
+import { UserIcon, EnvelopeIcon, LockClosedIcon, AcademicCapIcon, UsersIcon, ChevronLeftIcon, EyeIcon, EyeSlashIcon} from '@heroicons/react/24/outline';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -17,8 +17,11 @@ export default function RegisterPage() {
     role: 'student',
     class: '',
     address: '',
-    nisn: ''
+    nisn: '',
+    phone_number: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -37,6 +40,13 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
 
+    // Validasi password harus mengandung setidaknya satu huruf besar
+    if (!/[A-Z]/.test(formData.password)) {
+      setError('Password harus mengandung setidaknya satu huruf besar');
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Kata sandi tidak cocok');
       setLoading(false);
@@ -50,7 +60,8 @@ export default function RegisterPage() {
       formData.role,
       formData.class,
       formData.address,
-      formData.nisn
+      formData.nisn,
+      formData.phone_number
     );
 
     if (result.success) {
@@ -69,11 +80,21 @@ export default function RegisterPage() {
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-slate-50 to-slate-100">
       <motion.div
-        className="w-full max-w-md overflow-hidden border shadow-lg bg-card rounded-2xl border-border"
+        className="relative w-full max-w-md overflow-hidden border shadow-lg bg-card rounded-2xl border-border"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
+        {/* Back button */}
+        <Link
+          href="/login"
+          className="absolute z-10 flex items-center p-2 transition-colors bg-white border border-gray-200 rounded-lg shadow-sm top-4 left-4 hover:bg-gray-50"
+          aria-label="Kembali ke halaman utama"
+        >
+          <ChevronLeftIcon className="w-5 h-5 mr-1 text-primary-600" />
+          <span className="text-sm font-medium text-primary-600">Kembali</span>
+        </Link>
+
         {/* Header with logo */}
         <div className="p-8 text-center bg-gradient-to-r from-primary to-indigo-600">
           <div className="flex justify-center mb-4">
@@ -207,25 +228,56 @@ export default function RegisterPage() {
             />
           </div>
 
-            <div className="relative mb-4">
+          <div className="relative mb-4">
+            <label htmlFor="phone_number" className="block mb-1 text-sm font-medium text-foreground">
+              Nomor HP
+            </label>
+            <div className="relative">
+              <input
+                type="tel"
+                id="phone_number"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleChange}
+                className="w-full py-3 pl-12 pr-4 transition-all duration-200 border rounded-lg border-input focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background hover:border-primary/30"
+                placeholder="Masukkan nomor HP Anda"
+              />
+              <div className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative mb-4">
             <label htmlFor="password" className="block mb-1 text-sm font-medium text-foreground">
               Kata Sandi
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full py-3 pl-12 pr-4 transition-all duration-200 border rounded-lg border-input focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background hover:border-primary/30"
+                className="w-full py-3 pl-12 pr-12 transition-all duration-200 border rounded-lg border-input focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background hover:border-primary/30"
                 placeholder="Masukkan kata sandi Anda"
               />
               <div className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2">
                 <LockClosedIcon className="w-5 h-5" />
               </div>
+              <button
+                type="button"
+                className="absolute text-gray-400 transform -translate-y-1/2 right-4 top-1/2 focus:outline-none"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+              >
+                {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+              </button>
             </div>
+            <p className="mt-1 text-xs text-gray-500">Password harus mengandung setidaknya satu huruf besar</p>
           </div>
 
           <div className="relative mb-4">
@@ -234,18 +286,26 @@ export default function RegisterPage() {
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className="w-full py-3 pl-12 pr-4 transition-all duration-200 border rounded-lg border-input focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background hover:border-primary/30"
+                className="w-full py-3 pl-12 pr-12 transition-all duration-200 border rounded-lg border-input focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background hover:border-primary/30"
                 placeholder="Konfirmasi kata sandi Anda"
               />
               <div className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2">
                 <LockClosedIcon className="w-5 h-5" />
               </div>
+              <button
+                type="button"
+                className="absolute text-gray-400 transform -translate-y-1/2 right-4 top-1/2 focus:outline-none"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Sembunyikan konfirmasi kata sandi" : "Tampilkan konfirmasi kata sandi"}
+              >
+                {showConfirmPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 

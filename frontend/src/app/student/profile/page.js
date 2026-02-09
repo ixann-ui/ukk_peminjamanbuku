@@ -14,6 +14,7 @@ import {
   XMarkIcon,
   PhotoIcon,
   ScissorsIcon,
+  PhoneIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import Cropper from "react-easy-crop";
@@ -190,8 +191,8 @@ const ProfilePage = () => {
           transition={{ delay: 0.2, duration: 0.3 }}
           className="lg:col-span-1"
         >
-          <Card>
-            <div className="flex flex-col items-center p-6">
+          <Card className="h-full">
+            <div className="flex flex-col items-center justify-center p-6 h-full">
               <div className="relative">
                 <img
                   src={
@@ -281,7 +282,7 @@ const ProfilePage = () => {
           transition={{ delay: 0.3, duration: 0.3 }}
           className="lg:col-span-2"
         >
-          <Card>
+          <Card className="h-full">
             <div className="p-6">
               <h2 className="mb-6 text-xl font-bold text-gray-800">
                 Informasi Pribadi
@@ -327,6 +328,16 @@ const ProfilePage = () => {
                       user.user_address ||
                       user.user?.address ||
                       "N/A"}
+                  </p>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <PhoneIcon className="w-5 h-5 mr-3 text-primary-600" />
+                    <span>No HP</span>
+                  </div>
+                  <p className="mt-1 text-lg font-medium text-gray-900">
+                    {user.phone_number || "N/A"}
                   </p>
                 </div>
               </div>

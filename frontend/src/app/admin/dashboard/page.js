@@ -1,11 +1,20 @@
 // app/admin/dashboard/page.js
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { UserGroupIcon, BookOpenIcon, TagIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
-import DynamicNotification from '../../../components/DynamicNotification';
+import { useState, useEffect } from "react";
+import { useAuth } from "../../../contexts/AuthContext";
+import {
+  UserGroupIcon,
+  BookOpenIcon,
+  TagIcon,
+  ArrowPathIcon,
+  TrashIcon,
+  BanknotesIcon,
+  RectangleStackIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import DynamicNotification from "../../../components/DynamicNotification";
 
 const AdminDashboard = () => {
   const { token, user } = useAuth();
@@ -13,80 +22,146 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalBooks: 0,
     totalCategories: 0,
-    activeBorrows: 0
+    activeBorrows: 0,
+    pendingRequests: 0,
+    overdueBooks: 0,
+    totalFines: 0,
   });
   const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
   // Define fetchStats function outside useEffect so it can be called from other functions
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [usersRes, booksRes, categoriesRes, transactionsRes, recentTransactionsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/users', {
-          headers: { 'Authorization': `Bearer ${token}` }
+      const [
+        usersRes,
+        booksRes,
+        categoriesRes,
+        allTransactionsRes, // Get all transactions to calculate fines properly
+        pendingTransactionsRes,
+        recentTransactionsRes,
+      ] = await Promise.all([
+        fetch("http://localhost:5000/api/users", {
+          headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:5000/api/books', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        fetch("http://localhost:5000/api/books", {
+          headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:5000/api/categories', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        fetch("http://localhost:5000/api/categories", {
+          headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:5000/api/transactions?status=borrowed', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        fetch("http://localhost:5000/api/transactions", { // Get all transactions
+          headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch('http://localhost:5000/api/transactions?limit=5&sort_by=id&sort_order=ASC', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        fetch("http://localhost:5000/api/transactions?status=pending", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(
+          "http://localhost:5000/api/transactions?limit=5&sort_by=id&sort_order=DESC",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        ),
       ]);
 
-      const [usersData, booksData, categoriesData, transactionsData, recentTransactionsData] = await Promise.all([
+      const [
+        usersData,
+        booksData,
+        categoriesData,
+        allTransactionsData,
+        pendingTransactionsData,
+        recentTransactionsData,
+      ] = await Promise.all([
         usersRes.json(),
         booksRes.json(),
         categoriesRes.json(),
-        transactionsRes.json(),
-        recentTransactionsRes.json()
+        allTransactionsRes.json(),
+        pendingTransactionsRes.json(),
+        recentTransactionsRes.json(),
       ]);
+
+      // Count pending requests separately
+      const pendingCount = pendingTransactionsData.transactions?.length || 0;
+
+      // Count active borrows (borrowed and overdue)
+      const activeBorrows = allTransactionsData.transactions?.filter(
+        (t) => t.status === "borrowed" || t.status === "overdue",
+      ).length || 0;
+
+      // Count overdue books separately
+      const overdueBooks = allTransactionsData.transactions?.filter(
+        (t) => t.status === "overdue"
+      ).length || 0;
+
+      // Calculate total fines from all transactions
+      const totalFines = allTransactionsData.transactions?.reduce((sum, transaction) => {
+        return sum + (parseFloat(transaction.fine_amount) || 0);
+      }, 0) || 0;
 
       setStats({
         totalUsers: usersData.pagination?.totalUsers || 0,
         totalBooks: booksData.pagination?.totalBooks || 0,
         totalCategories: categoriesData.pagination?.totalCategories || 0,
-        activeBorrows: transactionsData.pagination?.totalTransactions || 0
+        activeBorrows: activeBorrows,
+        pendingRequests: pendingCount,
+        overdueBooks: overdueBooks,
+        totalFines: totalFines,
       });
 
       // Format recent activities
-      const activities = (recentTransactionsData.transactions || []).slice(0, 5).map(transaction => {
-        let activityText = '';
-        let icon = BookOpenIcon;
-        let color = 'blue';
+      const activities = (recentTransactionsData.transactions || [])
+        .slice(0, 5)
+        .map((transaction) => {
+          let activityText = "";
+          let icon = BookOpenIcon;
+          let color = "blue";
 
-        if (transaction.status === 'borrowed') {
-          activityText = `${transaction.user_name} meminjam buku: ${transaction.book_title}`;
-          icon = BookOpenIcon;
-          color = 'blue';
-        } else if (transaction.status === 'returned') {
-          activityText = `${transaction.user_name} mengembalikan buku: ${transaction.book_title}`;
-          icon = ArrowPathIcon;
-          color = 'green';
-        }
+          if (transaction.status === "borrowed") {
+            activityText = `${transaction.user_name} meminjam buku: ${transaction.book_title || 'Buku'}`;
+            icon = BookOpenIcon;
+            color = "blue";
+          } else if (transaction.status === "returned") {
+            activityText = `${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'}`;
+            icon = ArrowPathIcon;
+            color = "green";
+          } else if (transaction.status === "pending") {
+            activityText = `${transaction.user_name} mengajukan permintaan peminjaman buku: ${transaction.book_title || 'Buku'}`;
+            icon = BookOpenIcon;
+            color = "blue";
+          } else if (transaction.status === "overdue") {
+            const fineAmount = transaction.fine_amount > 0
+              ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+              : "Rp 0";
+            activityText = `${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+            icon = ExclamationTriangleIcon;
+            color = "red";
+          } else if (transaction.status === "rejected") {
+            activityText = `${transaction.user_name} permintaan peminjaman ditolak: ${transaction.book_title || 'Buku'}`;
+            icon = TrashIcon;
+            color = "red";
+          }
 
-        return {
-          id: transaction.id,
-          text: activityText,
-          icon: icon,
-          color: color,
-          date: transaction.created_at || transaction.return_date,
-          status: transaction.status
-        };
-      });
+          return {
+            id: transaction.id,
+            text: activityText,
+            icon: icon,
+            color: color,
+            date: transaction.created_at || transaction.return_date,
+            status: transaction.status,
+          };
+        });
 
       setRecentActivities(activities);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
     } finally {
       setLoading(false);
     }
@@ -98,38 +173,111 @@ const AdminDashboard = () => {
     }
   }, [token]);
 
+  // Listen for transaction actions (approve/reject/return) from other admin pages
+  useEffect(() => {
+    const handler = (e) => {
+      try {
+        const { action, transaction } = e.detail || {};
+        if (!transaction || !action) return;
+
+        let activityText = "";
+        let icon = BookOpenIcon;
+        let color = "blue";
+
+        if (action === "approve") {
+          activityText = `${transaction.user_name} permintaan disetujui: ${transaction.book_title || 'Buku'}`;
+          icon = ArrowPathIcon;
+          color = "green";
+        } else if (action === "reject") {
+          activityText = `${transaction.user_name} permintaan ditolak: ${transaction.book_title || 'Buku'}`;
+          icon = TrashIcon;
+          color = "red";
+        } else if (action === "return") {
+          const fineAmount = transaction.fine_amount > 0
+            ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+            : "Rp 0";
+          activityText = `${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+          icon = ArrowPathIcon;
+          color = "green";
+        } else if (action === "overdue") {
+          const fineAmount = transaction.fine_amount > 0
+            ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+            : "Rp 0";
+          activityText = `${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+          icon = ExclamationTriangleIcon;
+          color = "red";
+        }
+
+        const newActivity = {
+          id: `local-${Date.now()}`,
+          text: activityText,
+          icon,
+          color,
+          date: new Date().toISOString(),
+          status: transaction.status,
+        };
+
+        setRecentActivities((prev) => {
+          const updated = [newActivity, ...(prev || [])];
+          return updated.slice(0, 5);
+        });
+
+        // Optionally update stats counters quickly
+        setStats((s) => ({
+          ...s,
+          pendingRequests:
+            action === "approve" || action === "reject"
+              ? Math.max(0, (s.pendingRequests || 0) - 1)
+              : s.pendingRequests,
+          activeBorrows:
+            action === "approve" ? (s.activeBorrows || 0) + 1 : s.activeBorrows,
+        }));
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    window.addEventListener("transactionAction", handler);
+    return () => window.removeEventListener("transactionAction", handler);
+  }, [token]);
+
   const handleClearActivities = async () => {
     if (!token) return;
 
     setIsClearing(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/transactions/activities/clear`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/transactions/activities/clear`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       const data = await response.json();
 
       if (response.ok) {
-        setNotification({ show: true, message: data.message, type: 'success' });
+        setNotification({ show: true, message: data.message, type: "success" });
         // Refresh the activities after clearing
         fetchStats();
       } else {
         setNotification({
           show: true,
-          message: 'Gagal membersihkan aktivitas: ' + (data.message || 'Terjadi kesalahan'),
-          type: 'error'
+          message:
+            "Gagal membersihkan aktivitas: " +
+            (data.message || "Terjadi kesalahan"),
+          type: "error",
         });
       }
     } catch (error) {
-      console.error('Error clearing activities:', error);
+      console.error("Error clearing activities:", error);
       setNotification({
         show: true,
-        message: 'Terjadi kesalahan saat membersihkan aktivitas',
-        type: 'error'
+        message: "Terjadi kesalahan saat membersihkan aktivitas",
+        type: "error",
       });
     } finally {
       setIsClearing(false);
@@ -150,10 +298,51 @@ const AdminDashboard = () => {
   };
 
   const statCards = [
-    { title: 'Total Pengguna', value: stats.totalUsers, icon: UserGroupIcon, color: 'bg-blue-500' },
-    { title: 'Total Buku', value: stats.totalBooks, icon: BookOpenIcon, color: 'bg-green-500' },
-    { title: 'Kategori', value: stats.totalCategories, icon: TagIcon, color: 'bg-yellow-500' },
-    { title: 'Peminjaman Aktif', value: stats.activeBorrows, icon: ArrowPathIcon, color: 'bg-purple-500' },
+    {
+      title: "Total Pengguna",
+      value: stats.totalUsers,
+      icon: UserGroupIcon,
+      color: "bg-blue-500",
+    },
+    {
+      title: "Total Buku",
+      value: stats.totalBooks,
+      icon: BookOpenIcon,
+      color: "bg-green-500",
+    },
+    {
+      title: "Kategori",
+      value: stats.totalCategories,
+      icon: TagIcon,
+      color: "bg-yellow-500",
+    },
+    {
+      title: "Peminjaman Aktif",
+      value: stats.activeBorrows,
+      icon: ArrowPathIcon,
+      color: "bg-purple-500",
+    },
+    {
+      title: "Buku Terlambat",
+      value: stats.overdueBooks,
+      icon: ExclamationTriangleIcon,
+      color: "bg-red-500",
+    },
+    {
+      title: "Permintaan Persetujuan",
+      value: stats.pendingRequests,
+      icon: RectangleStackIcon,
+      color: "bg-indigo-500",
+    },
+    {
+      title: "Total Denda",
+      value:
+        stats.totalFines > 0
+          ? `Rp ${stats.totalFines.toLocaleString("id-ID")}`
+          : "Rp 0",
+      icon: BanknotesIcon,
+      color: "bg-red-500",
+    },
   ];
 
   return (
@@ -169,7 +358,9 @@ const AdminDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
         >
-          <h1 className="text-2xl font-bold text-gray-800">Selamat Datang, {user?.name || 'Admin'}!</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Selamat Datang, {user?.name || "Admin"}!
+          </h1>
           <p className="text-gray-600">Sistem Manajemen Peminjaman Buku</p>
         </motion.div>
 
@@ -187,28 +378,65 @@ const AdminDashboard = () => {
             {/* Stats Cards - Responsive Grid */}
             <motion.div
               className="grid w-full max-w-full gap-6"
-              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.3 }}
             >
               {statCards.map((stat, index) => {
                 const IconComponent = stat.icon;
+                let linkTo = "";
+
+                switch (stat.title) {
+                  case "Total Pengguna":
+                    linkTo = "/admin/users";
+                    break;
+                  case "Total Buku":
+                    linkTo = "/admin/books";
+                    break;
+                  case "Kategori":
+                    linkTo = "/admin/categories";
+                    break;
+                  case "Peminjaman Aktif":
+                    linkTo = "/admin/transactions";
+                    break;
+                  case "Permintaan Persetujuan":
+                    linkTo = "/admin/transactions?status=pending";
+                    break;
+                  case "Buku Terlambat":
+                    linkTo = "/admin/transactions?status=overdue";
+                    break;
+                  case "Total Denda":
+                    linkTo = "/admin/transactions?status=overdue";
+                    break;
+                  default:
+                    linkTo = "#";
+                }
+
                 return (
                   <motion.div
                     key={index}
-                    className="flex items-center w-full min-w-0 p-6 bg-white shadow rounded-xl"
+                    className="flex items-center w-full min-w-0 p-6 transition-shadow bg-white shadow cursor-pointer rounded-xl hover:shadow-lg" // Added cursor-pointer and hover effects
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
                     whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    onClick={() => (window.location.href = linkTo)} // Added click handler
                   >
-                    <div className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl mr-4 flex-shrink-0`}>
+                    <div
+                      className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl mr-4 flex-shrink-0`}
+                    >
                       <IconComponent className="w-6 h-6" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm text-gray-500 truncate">{stat.title}</p>
-                      <p className="text-2xl font-bold text-gray-800 truncate">{stat.value}</p>
+                      <p className="text-sm text-gray-500 truncate">
+                        {stat.title}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-800 truncate">
+                        {stat.value}
+                      </p>
                     </div>
                   </motion.div>
                 );
@@ -237,8 +465,8 @@ const AdminDashboard = () => {
                     disabled={isClearing}
                     className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 ${
                       isClearing
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-red-500 hover:bg-red-600 text-white'
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-red-500 hover:bg-red-600 text-white"
                     }`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -246,15 +474,31 @@ const AdminDashboard = () => {
                   >
                     {isClearing ? (
                       <>
-                        <svg className="w-4 h-4 mr-2 -ml-1 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="w-4 h-4 mr-2 -ml-1 text-white animate-spin"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Menghapus...
                       </>
                     ) : (
                       <>
-                        <TrashIcon className="w-4 h-4" />
+                        <TrashIcon className="w-4 h-4 cursor-pointer"/>
                         Bersihkan Aktivitas
                       </>
                     )}
@@ -265,8 +509,18 @@ const AdminDashboard = () => {
                 {recentActivities.length > 0 ? (
                   recentActivities.map((activity) => {
                     const IconComponent = activity.icon;
-                    const bgColor = activity.color === 'blue' ? 'bg-blue-100' : 'bg-green-100';
-                    const textColor = activity.color === 'blue' ? 'text-blue-600' : 'text-green-600';
+                    const bgColor =
+                      activity.color === "blue"
+                        ? "bg-blue-100"
+                        : activity.color === "red"
+                          ? "bg-red-100"
+                          : "bg-green-100";
+                    const textColor =
+                      activity.color === "blue"
+                        ? "text-blue-600"
+                        : activity.color === "red"
+                          ? "text-red-600"
+                          : "text-green-600";
 
                     return (
                       <motion.div
@@ -276,19 +530,26 @@ const AdminDashboard = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <div className={`flex items-center justify-center w-10 h-10 mr-3 ${textColor} ${bgColor} rounded-full flex-shrink-0`}>
+                        <div
+                          className={`flex items-center justify-center w-10 h-10 mr-3 ${textColor} ${bgColor} rounded-full flex-shrink-0`}
+                        >
                           <IconComponent className="w-5 h-5" />
                         </div>
                         <div className="flex-1 min-w-0 overflow-hidden">
-                          <p className="font-medium truncate">{activity.text}</p>
+                          <p className="font-medium truncate">
+                            {activity.text}
+                          </p>
                           <p className="text-sm text-gray-500 truncate">
-                            {new Date(activity.date).toLocaleDateString('id-ID', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {new Date(activity.date).toLocaleDateString(
+                              "id-ID",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </p>
                         </div>
                       </motion.div>
@@ -313,9 +574,12 @@ const AdminDashboard = () => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <h3 className="mb-2 text-lg font-semibold text-gray-900">Yakin ingin membersihkan aktivitas?</h3>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
+              Yakin ingin membersihkan aktivitas?
+            </h3>
             <p className="mb-6 text-gray-600">
-              Yakin ingin membersihkan aktivitas lama (aktivitas yang telah selesai)? Data yang telah dihapus tidak dapat dipulihkan.
+              Yakin ingin membersihkan aktivitas lama (aktivitas yang telah
+              selesai)? Data yang telah dihapus tidak dapat dipulihkan.
             </p>
             <div className="flex justify-end space-x-3">
               <button

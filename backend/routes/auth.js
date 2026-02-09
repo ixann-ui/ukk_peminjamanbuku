@@ -10,7 +10,12 @@ const router = express.Router();
 // Register user (only for testing, normally only admin can register students)
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role = 'student', class: studentClass, address, nisn } = req.body;
+    const { name, email, password, role = 'student', class: studentClass, address, nisn, phone_number, max_borrow_limit = 5 } = req.body;
+
+    // Validasi password harus mengandung setidaknya satu huruf besar
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return res.status(400).json({ message: 'Password harus mengandung setidaknya satu huruf besar' });
+    }
 
     // Check if user already exists
     const checkQuery = 'SELECT id FROM users WHERE email = ?';
@@ -28,15 +33,15 @@ router.post('/register', async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Insert new user
-      const insertQuery = 'INSERT INTO users (name, email, password, role, class, address, nisn) VALUES (?, ?, ?, ?, ?, ?, ?)';
-      db.query(insertQuery, [name, email, hashedPassword, role, studentClass, address, nisn], (err, result) => {
+      const insertQuery = 'INSERT INTO users (name, email, password, role, class, address, nisn, phone_number, max_borrow_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      db.query(insertQuery, [name, email, hashedPassword, role, studentClass, address, nisn, phone_number, max_borrow_limit], (err, result) => {
         if (err) {
           console.error(err);
           return res.status(500).json({ message: 'Database error' });
         }
 
         // Get the created user
-        const selectQuery = 'SELECT id, name, email, role, class, address, nisn FROM users WHERE id = ?';
+        const selectQuery = 'SELECT id, name, email, role, class, address, nisn, phone_number, max_borrow_limit, profile_picture FROM users WHERE id = ?';
         db.query(selectQuery, [result.insertId], (err, userResult) => {
           if (err) {
             console.error(err);
@@ -63,6 +68,8 @@ router.post('/register', async (req, res) => {
               class: user.class,
               address: user.address,
               nisn: user.nisn,
+              phone_number: user.phone_number,
+              max_borrow_limit: user.max_borrow_limit,
               profile_picture: user.profile_picture
             }
           });
@@ -81,7 +88,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const query = 'SELECT id, name, email, password, role, class, address, nisn, profile_picture FROM users WHERE email = ?';
+    const query = 'SELECT id, name, email, password, role, class, address, nisn, phone_number, max_borrow_limit, profile_picture FROM users WHERE email = ?';
     db.query(query, [email], async (err, results) => {
       if (err) {
         console.error(err);
@@ -118,6 +125,8 @@ router.post('/login', async (req, res) => {
           class: user.class,
           address: user.address,
           nisn: user.nisn,
+          phone_number: user.phone_number,
+          max_borrow_limit: user.max_borrow_limit,
           profile_picture: user.profile_picture
         }
       });
@@ -132,7 +141,7 @@ router.post('/login', async (req, res) => {
 router.get('/profile', authenticateToken, (req, res) => {
   // In a real implementation, we would fetch the user from the database
   // For now, we'll return the user info from the token with profile picture
-  const query = 'SELECT id, name, email, role, class, address, nisn, profile_picture FROM users WHERE id = ?';
+  const query = 'SELECT id, name, email, role, class, address, nisn, phone_number, max_borrow_limit, profile_picture FROM users WHERE id = ?';
   db.query(query, [req.user.id], (err, results) => {
     if (err) {
       console.error(err);
@@ -154,6 +163,8 @@ router.get('/profile', authenticateToken, (req, res) => {
         class: user.class,
         address: user.address,
         nisn: user.nisn,
+        phone_number: user.phone_number,
+        max_borrow_limit: user.max_borrow_limit,
         profile_picture: user.profile_picture
       }
     });

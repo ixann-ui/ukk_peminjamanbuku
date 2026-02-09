@@ -2,22 +2,23 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import { HomeIcon, UserGroupIcon, BookOpenIcon, TagIcon, CreditCardIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+import { HomeIcon, UserGroupIcon, BookOpenIcon, TagIcon, CreditCardIcon, ArrowRightStartOnRectangleIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import DynamicNotification from '../DynamicNotification';
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { logout } = useAuth();
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+
   const menuItems = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
-    { name: 'Pengguna', href: '/admin/users', icon: UserGroupIcon },
     { name: 'Buku', href: '/admin/books', icon: BookOpenIcon },
     { name: 'Kategori', href: '/admin/categories', icon: TagIcon },
     { name: 'Transaksi', href: '/admin/transactions', icon: CreditCardIcon },
@@ -45,11 +46,13 @@ const Sidebar = () => {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div className="p-5 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <BookOpenIcon className="w-8 h-8 text-primary-700" />
+        <div className="flex items-center space-x-4">
+          <div className="p-2 bg-blue-600 rounded-lg">
+            <BookOpenIcon className="w-8 h-8 text-white" />
+          </div>
           <div>
             <motion.h1
-              className="text-xl font-bold text-primary-700"
+              className="text-xl font-bold text-gray-800"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.3 }}
@@ -70,6 +73,91 @@ const Sidebar = () => {
 
       <nav className="flex-1 p-3 overflow-y-auto">
         <ul className="space-y-1">
+          {/* Dashboard item */}
+          <motion.li
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2, delay: 0.05 }}
+          >
+            <Link
+              href="/admin/dashboard"
+              className={`flex items-center p-3 rounded-lg transition ${
+                pathname === '/admin/dashboard'
+                  ? 'bg-primary-100 text-primary-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <HomeIcon className="w-5 h-5 mr-3" />
+              <span className="truncate">Dashboard</span>
+            </Link>
+          </motion.li>
+
+          {/* Manajemen Pengguna dropdown */}
+          <motion.li
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
+          >
+            <div>
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className={`flex items-center justify-between w-full p-3 rounded-lg transition ${
+                  pathname.startsWith('/admin/users')
+                    ? 'bg-primary-100 text-primary-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center">
+                  <UserGroupIcon className="w-5 h-5 mr-3 cursor-pointer"/>
+                  <span className="truncate">Pengguna</span>
+                </div>
+                <ChevronDownIcon
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isUserDropdownOpen ? 'transform rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              <AnimatePresence>
+                {isUserDropdownOpen && (
+                  <motion.ul
+                    className="pl-8 mt-1 space-y-1"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                  <li>
+                    <Link
+                      href="/admin/users?role=admin"
+                      className={`flex items-center p-2 rounded-lg transition ${
+                        pathname === '/admin/users' && searchParams.get('role') === 'admin'
+                          ? 'bg-primary-100 text-primary-700 font-medium'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className="truncate">Admin</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admin/users?role=student"
+                      className={`flex items-center p-2 rounded-lg transition ${
+                        pathname === '/admin/users' && searchParams.get('role') === 'student'
+                          ? 'bg-primary-100 text-primary-700 font-medium'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className="truncate">Siswa</span>
+                    </Link>
+                  </li>
+                </motion.ul>
+              )}
+              </AnimatePresence>
+            </div>
+          </motion.li>
+
+          {/* Other menu items */}
           {menuItems.map((item, index) => {
             const IconComponent = item.icon;
             return (
@@ -77,7 +165,7 @@ const Sidebar = () => {
                 key={item.href}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
+                transition={{ duration: 0.2, delay: (index + 2) * 0.05 }} // Adjust delay for proper sequence
               >
                 <Link
                   href={item.href}
