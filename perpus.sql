@@ -99,7 +99,7 @@ CREATE TABLE `transactions` (
   `borrow_date` date NOT NULL,
   `due_date` date NOT NULL,
   `return_date` datetime DEFAULT NULL,
-  `status` enum('borrowed','returned','overdue','pending','approved') DEFAULT 'borrowed',
+  `status` enum('borrowed','returned','overdue','pending','rejected','approved') DEFAULT 'borrowed',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `fine_amount` decimal(10,2) DEFAULT 0.00,

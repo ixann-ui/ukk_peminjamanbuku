@@ -58,7 +58,8 @@ const AdminDashboard = () => {
         fetch("http://localhost:5000/api/categories", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("http://localhost:5000/api/transactions", { // Get all transactions
+        fetch("http://localhost:5000/api/transactions", {
+          // Get all transactions
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch("http://localhost:5000/api/transactions?status=pending", {
@@ -92,19 +93,21 @@ const AdminDashboard = () => {
       const pendingCount = pendingTransactionsData.transactions?.length || 0;
 
       // Count active borrows (borrowed and overdue)
-      const activeBorrows = allTransactionsData.transactions?.filter(
-        (t) => t.status === "borrowed" || t.status === "overdue",
-      ).length || 0;
+      const activeBorrows =
+        allTransactionsData.transactions?.filter(
+          (t) => t.status === "borrowed" || t.status === "overdue",
+        ).length || 0;
 
       // Count overdue books separately
-      const overdueBooks = allTransactionsData.transactions?.filter(
-        (t) => t.status === "overdue"
-      ).length || 0;
+      const overdueBooks =
+        allTransactionsData.transactions?.filter((t) => t.status === "overdue")
+          .length || 0;
 
       // Calculate total fines from all transactions
-      const totalFines = allTransactionsData.transactions?.reduce((sum, transaction) => {
-        return sum + (parseFloat(transaction.fine_amount) || 0);
-      }, 0) || 0;
+      const totalFines =
+        allTransactionsData.transactions?.reduce((sum, transaction) => {
+          return sum + (parseFloat(transaction.fine_amount) || 0);
+        }, 0) || 0;
 
       setStats({
         totalUsers: usersData.pagination?.totalUsers || 0,
@@ -125,26 +128,40 @@ const AdminDashboard = () => {
           let color = "blue";
 
           if (transaction.status === "borrowed") {
-            activityText = `${transaction.user_name} meminjam buku: ${transaction.book_title || 'Buku'}`;
+            const reportedQty =
+              Number(
+                transaction.quantity ??
+                  transaction.count ??
+                  transaction.book_count ??
+                  (transaction.books ? transaction.books.length : 1),
+              ) || 1;
+            const displayQty = Math.min(reportedQty, 5); // enforce max display of 5 per siswa
+            let qtyText = reportedQty > 1 ? ` sebanyak ${displayQty} buku` : "";
+            if (reportedQty > displayQty)
+              qtyText += ` (dilaporkan ${reportedQty})`;
+            activityText =
+              `Siswa ${transaction.user_name} meminjam buku: ${transaction.book_title || "Buku"}` +
+              qtyText;
             icon = BookOpenIcon;
             color = "blue";
           } else if (transaction.status === "returned") {
-            activityText = `Siswa ${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'}`;
+            activityText = `Siswa ${transaction.user_name} mengembalikan buku: ${transaction.book_title || "Buku"}`;
             icon = ArrowPathIcon;
             color = "green";
           } else if (transaction.status === "pending") {
-            activityText = `${transaction.user_name} mengajukan permintaan peminjaman buku: ${transaction.book_title || 'Buku'}`;
+            activityText = `${transaction.user_name} mengajukan permintaan peminjaman buku: ${transaction.book_title || "Buku"}`;
             icon = BookOpenIcon;
             color = "blue";
           } else if (transaction.status === "overdue") {
-            const fineAmount = transaction.fine_amount > 0
-              ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
-              : "Rp 0";
-            activityText = `${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+            const fineAmount =
+              transaction.fine_amount > 0
+                ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+                : "Rp 0";
+            activityText = ` Siswa ${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || "Buku"} (Denda: ${fineAmount})`;
             icon = ExclamationTriangleIcon;
             color = "red";
           } else if (transaction.status === "rejected") {
-            activityText = `${transaction.user_name} permintaan peminjaman ditolak: ${transaction.book_title || 'Buku'}`;
+            activityText = `${transaction.user_name} permintaan peminjaman ditolak: ${transaction.book_title || "Buku"}`;
             icon = TrashIcon;
             color = "red";
           }
@@ -185,25 +202,81 @@ const AdminDashboard = () => {
         let color = "blue";
 
         if (action === "approve") {
-          activityText = `${transaction.user_name} permintaan disetujui: ${transaction.book_title || 'Buku'}`;
+          const reportedQty =
+            Number(
+              transaction.quantity ??
+                transaction.count ??
+                transaction.book_count ??
+                (transaction.books ? transaction.books.length : 1),
+            ) || 1;
+          const displayQty = Math.min(reportedQty, 5);
+          let qtyText = reportedQty > 1 ? ` sebanyak ${displayQty} buku` : "";
+          if (reportedQty > displayQty)
+            qtyText += ` (dilaporkan ${reportedQty})`;
+          activityText =
+            `${transaction.user_name} permintaan disetujui: ${transaction.book_title || "Buku"}` +
+            qtyText;
           icon = ArrowPathIcon;
           color = "green";
         } else if (action === "reject") {
-          activityText = `${transaction.user_name} permintaan ditolak: ${transaction.book_title || 'Buku'}`;
+          const reportedQty =
+            Number(
+              transaction.quantity ??
+                transaction.count ??
+                transaction.book_count ??
+                (transaction.books ? transaction.books.length : 1),
+            ) || 1;
+          const displayQty = Math.min(reportedQty, 5);
+          let qtyText = reportedQty > 1 ? ` sebanyak ${displayQty} buku` : "";
+          if (reportedQty > displayQty)
+            qtyText += ` (dilaporkan ${reportedQty})`;
+          activityText =
+            `${transaction.user_name} permintaan ditolak: ${transaction.book_title || "Buku"}` +
+            qtyText;
           icon = TrashIcon;
           color = "red";
         } else if (action === "return") {
-          const fineAmount = transaction.fine_amount > 0
-            ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
-            : "Rp 0";
-          activityText = `Siswa  ${transaction.user_name} mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+          const fineAmount =
+            transaction.fine_amount > 0
+              ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+              : "Rp 0";
+          const reportedQty =
+            Number(
+              transaction.quantity ??
+                transaction.count ??
+                transaction.book_count ??
+                (transaction.books ? transaction.books.length : 1),
+            ) || 1;
+          const displayQty = Math.min(reportedQty, 5);
+          let qtyText = reportedQty > 1 ? ` sebanyak ${displayQty} buku` : "";
+          if (reportedQty > displayQty)
+            qtyText += ` (dilaporkan ${reportedQty})`;
+          activityText =
+            `Siswa  ${transaction.user_name} mengembalikan buku: ${transaction.book_title || "Buku"}` +
+            qtyText +
+            ` (Denda: ${fineAmount})`;
           icon = ArrowPathIcon;
           color = "green";
         } else if (action === "overdue") {
-          const fineAmount = transaction.fine_amount > 0
-            ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
-            : "Rp 0";
-          activityText = `${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || 'Buku'} (Denda: ${fineAmount})`;
+          const fineAmount =
+            transaction.fine_amount > 0
+              ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
+              : "Rp 0";
+          const reportedQty =
+            Number(
+              transaction.quantity ??
+                transaction.count ??
+                transaction.book_count ??
+                (transaction.books ? transaction.books.length : 1),
+            ) || 1;
+          const displayQty = Math.min(reportedQty, 5);
+          let qtyText = reportedQty > 1 ? ` sebanyak ${displayQty} buku` : "";
+          if (reportedQty > displayQty)
+            qtyText += ` (dilaporkan ${reportedQty})`;
+          activityText =
+            `${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || "Buku"}` +
+            qtyText +
+            ` (Denda: ${fineAmount})`;
           icon = ExclamationTriangleIcon;
           color = "red";
         }
@@ -498,7 +571,7 @@ const AdminDashboard = () => {
                       </>
                     ) : (
                       <>
-                        <TrashIcon className="w-4 h-4 cursor-pointer"/>
+                        <TrashIcon className="w-4 h-4 cursor-pointer" />
                         Bersihkan Aktivitas
                       </>
                     )}
@@ -506,7 +579,7 @@ const AdminDashboard = () => {
                 )}
               </div>
               {/* Desktop Table View */}
-              <div className="hidden md:block w-full overflow-x-auto">
+              <div className="hidden w-full overflow-x-auto md:block">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -561,7 +634,7 @@ const AdminDashboard = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                               {new Date(activity.date).toLocaleDateString(
                                 "id-ID",
                                 {
@@ -595,7 +668,9 @@ const AdminDashboard = () => {
                                 d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                               ></path>
                             </svg>
-                            <p className="mt-4 font-medium">Tidak ada aktivitas</p>
+                            <p className="mt-4 font-medium">
+                              Tidak ada aktivitas
+                            </p>
                             <p className="text-gray-500">
                               Aktivitas akan muncul di sini ketika tersedia
                             </p>
@@ -606,9 +681,9 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               {/* Mobile Card View */}
-              <div className="md:hidden space-y-3">
+              <div className="space-y-3 md:hidden">
                 {recentActivities.length > 0 ? (
                   recentActivities.map((activity) => {
                     const IconComponent = activity.icon;
@@ -628,7 +703,7 @@ const AdminDashboard = () => {
                     return (
                       <motion.div
                         key={activity.id}
-                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                        className="p-4 border border-gray-200 rounded-lg bg-gray-50"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.2 }}
@@ -643,7 +718,7 @@ const AdminDashboard = () => {
                             <p className="font-medium text-gray-900">
                               {activity.text}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="mt-1 text-xs text-gray-500">
                               {new Date(activity.date).toLocaleDateString(
                                 "id-ID",
                                 {
@@ -661,7 +736,7 @@ const AdminDashboard = () => {
                 ) : (
                   <div className="p-8 text-center">
                     <svg
-                      className="w-12 h-12 text-gray-400 mx-auto"
+                      className="w-12 h-12 mx-auto text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -674,7 +749,9 @@ const AdminDashboard = () => {
                         d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       ></path>
                     </svg>
-                    <p className="mt-4 font-medium text-gray-900">Tidak ada aktivitas</p>
+                    <p className="mt-4 font-medium text-gray-900">
+                      Tidak ada aktivitas
+                    </p>
                     <p className="text-gray-500">
                       Aktivitas akan muncul di sini ketika tersedia
                     </p>

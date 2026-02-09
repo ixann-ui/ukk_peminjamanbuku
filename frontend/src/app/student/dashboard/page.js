@@ -12,6 +12,7 @@ import {
   MagnifyingGlassIcon,
   TrashIcon,
   RectangleStackIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import DynamicNotification from "../../../components/DynamicNotification";
@@ -102,7 +103,7 @@ const StudentDashboard = () => {
             let color = "blue";
 
             if (transaction.status === "borrowed") {
-              activityText = `Meminjam buku: ${transaction.book_title}`;
+              activityText = `Meminjam buku: ${transaction.book_title}`; 
               icon = BookmarkSquareIcon;
               color = "blue";
             } else if (transaction.status === "returned") {
@@ -454,7 +455,7 @@ const StudentDashboard = () => {
               >
                 Tindakan Cepat
               </motion.h2>
-              <div className="grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+              <div className="grid w-full max-w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                 <motion.a
                   href="/student/browse"
                   className="p-4 text-center transition border border-blue-200 rounded-lg bg-blue-50 hover:bg-blue-100 min-h-[120px] flex flex-col justify-center overflow-hidden"
@@ -492,6 +493,19 @@ const StudentDashboard = () => {
                   </div>
                   <h3 className="font-medium text-purple-700 truncate">
                     Buku Saya
+                  </h3>
+                </motion.a>
+                <motion.a
+                  href="/student/profile"
+                  className="p-4 text-center transition border border-indigo-200 rounded-lg bg-indigo-50 hover:bg-indigo-100 min-h-[120px] flex flex-col justify-center overflow-hidden"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex justify-center mb-2 text-2xl">
+                    <UserCircleIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-medium text-indigo-700 truncate">
+                    Profil Saya
                   </h3>
                 </motion.a>
               </div>
@@ -560,7 +574,7 @@ const StudentDashboard = () => {
                 )}
               </div>
               {/* Desktop Table View */}
-              <div className="hidden md:block w-full overflow-x-auto">
+              <div className="hidden w-full overflow-x-auto md:block">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -615,7 +629,7 @@ const StudentDashboard = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                               {new Date(activity.date).toLocaleDateString(
                                 "id-ID",
                                 {
@@ -662,7 +676,7 @@ const StudentDashboard = () => {
               </div>
               
               {/* Mobile Card View */}
-              <div className="md:hidden space-y-3">
+              <div className="space-y-3 md:hidden">
                 {recentActivities.length > 0 ? (
                   recentActivities.map((activity) => {
                     const IconComponent = activity.icon;
@@ -682,7 +696,7 @@ const StudentDashboard = () => {
                     return (
                       <motion.div
                         key={activity.id}
-                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                        className="p-4 border border-gray-200 rounded-lg bg-gray-50"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.2 }}
@@ -697,7 +711,7 @@ const StudentDashboard = () => {
                             <p className="font-medium text-gray-900">
                               {activity.text}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="mt-1 text-xs text-gray-500">
                               {new Date(activity.date).toLocaleDateString(
                                 "id-ID",
                                 {
@@ -720,7 +734,7 @@ const StudentDashboard = () => {
                     transition={{ delay: 0.9, duration: 0.3 }}
                   >
                     <svg
-                      className="w-12 h-12 text-gray-400 mx-auto"
+                      className="w-12 h-12 mx-auto text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

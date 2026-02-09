@@ -52,6 +52,11 @@ const TransactionsPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [formLoading, setFormLoading] = useState(false);
 
+  // Borrowing limit helpers for add-transaction form
+  const [userBorrowedCount, setUserBorrowedCount] = useState(0);
+  const [userMaxLimit, setUserMaxLimit] = useState(5);
+  const [maxQuantityAllowed, setMaxQuantityAllowed] = useState(5);
+
   // State for receipt modal
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransactionForReceipt, setSelectedTransactionForReceipt] =
@@ -98,8 +103,55 @@ const TransactionsPage = () => {
   const handleOpenAddForm = async () => {
     setFormLoading(true);
     await Promise.all([fetchUsers(), fetchBooks()]);
+    // reset per-user limits when opening
+    setUserBorrowedCount(0);
+    setUserMaxLimit(5);
+    setMaxQuantityAllowed(5);
     setFormLoading(false);
     setShowAddForm(true);
+  };
+
+  // When a user is selected, fetch how many books they currently have borrowed
+  const updateUserBorrowInfo = async (userId) => {
+    if (!userId) {
+      setUserBorrowedCount(0);
+      setUserMaxLimit(5);
+      setMaxQuantityAllowed(5);
+      return;
+    }
+
+    // find max borrow limit from fetched users list if available
+    const u = users.find((x) => String(x.id) === String(userId));
+    const maxLimit =
+      (u && (Number(u.max_borrow_limit) || u.max_borrow_limit)) || 5;
+    setUserMaxLimit(maxLimit);
+
+    try {
+      const url = `http://localhost:5000/api/transactions?user_id=${userId}&status=borrowed&limit=1`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const borrowedCount =
+        (data.pagination && Number(data.pagination.totalTransactions)) ||
+        (data.transactions && data.transactions.length) ||
+        0;
+      setUserBorrowedCount(borrowedCount);
+
+      const allowed = Math.max(0, Number(maxLimit) - Number(borrowedCount));
+      setMaxQuantityAllowed(allowed);
+
+      // clamp current quantity to allowed
+      setQuantity((q) => {
+        const val = Number(q) || 1;
+        if (allowed === 0) return 1; // keep 1 but form will block submission
+        return Math.min(val, allowed);
+      });
+    } catch (err) {
+      console.error("Error fetching user borrow info", err);
+      setUserBorrowedCount(0);
+      setMaxQuantityAllowed(Math.max(0, maxLimit));
+    }
   };
 
   // Handle form submission
@@ -124,6 +176,28 @@ const TransactionsPage = () => {
     }
 
     try {
+      // Validate against per-user limit before sending
+      if (selectedUser) {
+        if (Number(quantity) > maxQuantityAllowed) {
+          setNotification({
+            isVisible: true,
+            message: `Jumlah melebihi sisa kuota pengguna (maks ${maxQuantityAllowed})`,
+            type: "error",
+          });
+          setFormLoading(false);
+          return;
+        }
+
+        if (maxQuantityAllowed === 0) {
+          setNotification({
+            isVisible: true,
+            message: `Pengguna tidak dapat meminjam lebih banyak buku (kuota terpenuhi)`,
+            type: "error",
+          });
+          setFormLoading(false);
+          return;
+        }
+      }
       const response = await fetch("http://localhost:5000/api/transactions", {
         method: "POST",
         headers: {
@@ -477,10 +551,12 @@ const TransactionsPage = () => {
 
       if (response.ok) {
         // Update local state: prefer server-updated transaction, otherwise mark locally as rejected
+        // Force local status to 'rejected' so UI reflects the admin action immediately
         const updated = data.transaction
           ? {
               ...data.transaction,
               quantity: Number(data.transaction.quantity),
+              status: "rejected",
             }
           : {
               ...transaction,
@@ -733,9 +809,11 @@ const TransactionsPage = () => {
       },
       className: "text-blue-600 hover:text-blue-900",
       icon: DocumentTextIcon,
-      // Hide the receipt button for rejected transactions and for items that were returned but have a fine (returned late)
+      // Hide the receipt button for pending, rejected, or overdue transactions and for items that were returned but have a fine (returned late)
       condition: (transaction) =>
+        transaction.status !== "pending" &&
         transaction.status !== "rejected" &&
+        transaction.status !== "overdue" &&
         !(transaction.return_date && Number(transaction.fine_amount) > 0),
     },
   ];
@@ -1062,7 +1140,11 @@ const TransactionsPage = () => {
                 <select
                   id="user"
                   value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedUser(v);
+                    updateUserBorrowInfo(v);
+                  }}
                   className="w-full px-4 py-2 transition border rounded-lg border-input focus:ring-2 focus:ring-ring focus:border-ring bg-background"
                   required
                 >
@@ -1110,11 +1192,28 @@ const TransactionsPage = () => {
                   id="quantity"
                   type="number"
                   min={1}
+                  max={maxQuantityAllowed}
                   value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  onChange={(e) => {
+                    const raw = Number(e.target.value) || 1;
+                    const clamped =
+                      maxQuantityAllowed > 0
+                        ? Math.min(Math.max(1, raw), maxQuantityAllowed)
+                        : 1;
+                    setQuantity(clamped);
+                  }}
                   className="w-full px-4 py-2 transition border rounded-lg border-input focus:ring-2 focus:ring-ring focus:border-ring bg-background"
                   required
                 />
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Sisa kuota: {Math.max(0, userMaxLimit - userBorrowedCount)}{" "}
+                  dari {userMaxLimit}.
+                  {maxQuantityAllowed === 0 && selectedUser ? (
+                    <span className="ml-2 text-sm text-red-600">
+                      Kuota peminjaman telah penuh untuk pengguna ini.
+                    </span>
+                  ) : null}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

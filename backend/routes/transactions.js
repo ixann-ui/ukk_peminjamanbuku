@@ -250,6 +250,9 @@ function createTransaction(
   status = "borrowed",
   quantity = 1,
 ) {
+  // Ensure status is a valid non-empty string
+  const finalStatus =
+    status && String(status).trim() !== "" ? status : "pending";
   // Check if book is available
   const bookCheckQuery =
     "SELECT id, title, available_copies FROM books WHERE id = ?";
@@ -266,7 +269,7 @@ function createTransaction(
     const book = bookResults[0];
 
     // For pending requests, don't check available copies yet
-    if (status === "borrowed" && book.available_copies <= 0) {
+    if (finalStatus === "borrowed" && book.available_copies <= 0) {
       return res
         .status(400)
         .json({ message: "Buku tidak tersedia untuk dipinjam" });
@@ -289,7 +292,7 @@ function createTransaction(
       const maxBorrowLimit = user.max_borrow_limit || 5; // Default to 5 if not set
 
       // For pending requests, don't check borrowing limits yet
-      if (status === "borrowed") {
+      if (finalStatus === "borrowed") {
         // Check how many books the user currently has borrowed
         const borrowedCountQuery =
           'SELECT COUNT(*) as borrowed_count FROM transactions WHERE user_id = ? AND status = "borrowed"';
@@ -325,7 +328,7 @@ function createTransaction(
           res,
           user_id,
           book_id,
-          status,
+          finalStatus,
           book,
           quantity,
         );
@@ -343,6 +346,9 @@ function createTransactionRecord(
   book,
   quantity = 1,
 ) {
+  // guard against empty status
+  const insertStatus =
+    status && String(status).trim() !== "" ? status : "pending";
   // Calculate due date - use provided due date or default to 14 days from borrow date
   const now = new Date();
   const borrowDate =
@@ -384,14 +390,14 @@ function createTransactionRecord(
     book_id,
     borrowDate,
     dueDateStr,
-    status,
+    status: insertStatus,
     quantity,
   });
   const insertQuery =
     "INSERT INTO transactions (user_id, book_id, borrow_date, due_date, status, fine_amount, quantity) VALUES (?, ?, ?, ?, ?, 0.00, ?)";
   db.query(
     insertQuery,
-    [user_id, book_id, borrowDate, dueDateStr, status, quantity],
+    [user_id, book_id, borrowDate, dueDateStr, insertStatus, quantity],
     (err, result) => {
       if (err) {
         console.error("Database error in transaction creation:", err);
@@ -400,7 +406,7 @@ function createTransactionRecord(
           book_id,
           borrowDate,
           dueDateStr,
-          status,
+          insertStatus,
         ]);
         return res
           .status(500)
