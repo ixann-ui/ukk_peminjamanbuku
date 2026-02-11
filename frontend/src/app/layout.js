@@ -1,23 +1,24 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from '../contexts/AuthContext';
-import ClientLayout from '../components/ClientLayout';
+import { AuthProvider } from "../contexts/AuthContext";
+import ClientLayout from "../components/ClientLayout";
 
 const inter = Inter({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata = {
   title: "Peminjaman buku",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    minimumScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }) {
@@ -27,9 +28,7 @@ export default function RootLayout({ children }) {
         className={`${inter.variable} font-sans antialiased w-full max-w-full overflow-x-hidden min-h-screen`}
       >
         <AuthProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
+          <ClientLayout>{children}</ClientLayout>
         </AuthProvider>
       </body>
     </html>
