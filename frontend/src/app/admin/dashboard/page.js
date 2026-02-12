@@ -390,12 +390,12 @@ const AdminDashboard = () => {
       icon: TagIcon,
       color: "bg-yellow-500",
     },
-    {
-      title: "Peminjaman Aktif",
-      value: stats.activeBorrows,
-      icon: CheckBadgeIcon,
-      color: "bg-purple-500",
-    },
+    // {
+    //   title: "Peminjaman Aktif",
+    //   value: stats.activeBorrows,
+    //   icon: CheckBadgeIcon,
+    //   color: "bg-purple-500",
+    // },
     {
       title: "Buku Terlambat",
       value: stats.overdueBooks,
@@ -473,9 +473,9 @@ const AdminDashboard = () => {
                   case "Kategori":
                     linkTo = "/admin/categories";
                     break;
-                  case "Peminjaman Aktif":
-                    linkTo = "/admin/transactions";
-                    break;
+                  // case "Peminjaman Aktif":
+                  //   linkTo = "/admin/transactions";
+                  //   break;
                   case "Permintaan Persetujuan":
                     linkTo = "/admin/transactions?status=pending";
                     break;
