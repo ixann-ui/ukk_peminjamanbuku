@@ -16,6 +16,7 @@ import {
   PlusCircleIcon,
   MagnifyingGlassIcon,
   EyeIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import AnimatedButton from "../../../components/AnimatedButton";
@@ -347,6 +348,63 @@ const BooksPage = () => {
     }));
   };
 
+  // Export books as CSV for Excel (skip cover image)
+  // Export books as .xlsx using exceljs so Excel opens with proper headers and autofilter
+  const handleExportCSV = async () => {
+    try {
+      const mod = await import("exceljs");
+      const ExcelJS = mod && mod.default ? mod.default : mod;
+
+      const headers = [
+        "ID",
+        "Judul",
+        "Penulis",
+        "Tahun Terbit",
+        "ISBN",
+        "Kategori",
+        "Tersedia",
+        "Jumlah Halaman",
+        "Tanggal Ditambahkan",
+      ];
+
+      const rows = (books || []).map((b) => [
+        b.id,
+        b.title,
+        b.author,
+        b.publication_year || "",
+        b.isbn || "",
+        b.category_name || "",
+        b.available_copies,
+        b.page_count || "",
+        b.created_at ? new Date(b.created_at).toLocaleString("id-ID") : "",
+      ]);
+
+      const workbook = new ExcelJS.Workbook();
+      const ws = workbook.addWorksheet("Books");
+      ws.addRow(headers);
+      rows.forEach((r) => ws.addRow(r));
+      ws.autoFilter = {
+        from: { col: 1, row: 1 },
+        to: { col: headers.length, row: rows.length + 1 },
+      };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `books_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed:", err);
+    }
+  };
+
   const selectedFileName =
     formData.cover_image && typeof formData.cover_image !== "string"
       ? formData.cover_image.name
@@ -434,7 +492,7 @@ const BooksPage = () => {
       <Card
         title="Kelola Buku"
         headerActions={
-          <div className="relative">
+          <div className="relative flex items-center">
             <AnimatedButton
               data-dropdown-button
               onClick={() => setShowDropdown(!showDropdown)}
@@ -488,6 +546,15 @@ const BooksPage = () => {
                 </div>
               </div>
             )}
+            <AnimatedButton
+              onClick={handleExportCSV}
+              variant="secondary"
+              size="md"
+              className="flex items-center ml-3"
+            >
+              <ArrowDownTrayIcon className="w-5 h-5 mr-2 cursor-pointer " />
+              Ekspor
+            </AnimatedButton>
           </div>
         }
       >

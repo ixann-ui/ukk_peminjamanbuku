@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Peminjaman buku",
+  title: "Sanbook",
 };
 
 export const viewport = {

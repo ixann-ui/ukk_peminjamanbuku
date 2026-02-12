@@ -56,7 +56,7 @@ const StudentSidebar = ({ setSidebarOpen }) => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
               >
-                Peminjaman Buku
+                sanbook
               </motion.h1>
               <motion.p
                 className="text-xs text-gray-500"

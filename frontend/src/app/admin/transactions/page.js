@@ -16,6 +16,7 @@ import {
   MagnifyingGlassIcon,
   PlusCircleIcon,
   DocumentTextIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import AnimatedButton from "../../../components/AnimatedButton";
@@ -271,6 +272,64 @@ const TransactionsPage = () => {
       console.error("Error fetching transactions:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Export transactions as .xlsx using exceljs so Excel opens with proper headers and autofilter
+  const handleExportCSV = async () => {
+    try {
+      const mod = await import("exceljs");
+      const ExcelJS = mod && mod.default ? mod.default : mod;
+
+      const headers = [
+        "ID",
+        "Pengguna",
+        "Buku",
+        "Jumlah",
+        "Tanggal Pinjam",
+        "Tanggal Jatuh Tempo",
+        "Tanggal Kembali",
+        "Jam Kembali",
+        "Denda",
+        "Status",
+      ];
+
+      const rows = (transactions || []).map((t) => [
+        t.id,
+        t.user_name || "",
+        t.book_title || "",
+        t.quantity || 0,
+        t.borrow_date ? new Date(t.borrow_date).toLocaleString("id-ID") : "",
+        t.due_date ? new Date(t.due_date).toLocaleString("id-ID") : "",
+        t.return_date ? new Date(t.return_date).toLocaleString("id-ID") : "",
+        t.return_time || "",
+        t.fine_amount ? Number(t.fine_amount) : 0,
+        t.status || "",
+      ]);
+
+      const workbook = new ExcelJS.Workbook();
+      const ws = workbook.addWorksheet("Transactions");
+      ws.addRow(headers);
+      rows.forEach((r) => ws.addRow(r));
+      ws.autoFilter = {
+        from: { col: 1, row: 1 },
+        to: { col: headers.length, row: rows.length + 1 },
+      };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `transactions_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed:", err);
     }
   };
 
@@ -838,7 +897,16 @@ const TransactionsPage = () => {
                 <option value="overdue">Terlambat</option>
               </select>
             </div>
-            <div className="ml-auto">
+            <div className="flex items-center ml-auto space-x-3">
+              <AnimatedButton
+                onClick={handleExportCSV}
+                variant="secondary"
+                size="md"
+                className="flex items-center"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5 mr-2 cursor-pointer " />
+                Ekspor
+              </AnimatedButton>
               <AnimatedButton
                 onClick={handleOpenAddForm}
                 variant="primary"

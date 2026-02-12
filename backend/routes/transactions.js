@@ -584,7 +584,7 @@ function updateOverdueTransactions() {
             );
           } else if (updateResult.affectedRows > 0) {
             console.log(
-              `Updated fine amount for existing overdue transaction ${transaction.id}: Rp ${fineAmount}`,
+              `Jumlah denda diperbarui untuk transaksi jatuh tempo dengan id ${transaction.id}: sebesar Rp ${fineAmount}`,
             );
           }
         },

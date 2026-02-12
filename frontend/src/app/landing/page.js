@@ -42,7 +42,8 @@ export default function LandingPage() {
           <div className="p-2 rounded-lg bg-primary">
             <BookOpenIcon className="w-6 h-6 text-white" />
           </div>
-          <span className="text-xl font-bold text-gray-800">Peminjaman buku</span>
+          <span className="text-xl font-bold text-gray-800">Sanbook</span>
+          {/* <span className="text-xl font-bold text-gray-800">Peminjaman buku</span> */}
         </div>
         <div className="flex items-center space-x-4">
         </div>
@@ -58,7 +59,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              Sistem Peminjaman Buku
+              Website Peminjaman Buku
             </motion.h1>
             <motion.p 
               className="max-w-3xl mx-auto mb-10 text-xl text-gray-600"
@@ -165,7 +166,7 @@ export default function LandingPage() {
             Siap Mulai Menggunakan Sistem Kami?
           </motion.h2>
           <motion.p 
-            className="mb-8 text-lg text-primary-100"
+            className="mb-8 text-white"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -178,7 +179,7 @@ export default function LandingPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex flex-col justify-center gap-4 sm:flex-row"
           >
-            <Link 
+            {/* <Link 
               href="/login"
               className="inline-flex items-center justify-center px-6 py-3 text-base font-medium transition-colors bg-white rounded-lg text-primary hover:bg-gray-100"
             >
@@ -189,7 +190,7 @@ export default function LandingPage() {
               className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white transition-colors border border-white rounded-lg bg-primary-600 hover:bg-primary-700"
             >
               Buat Akun Gratis
-            </Link>
+            </Link> */}
           </motion.div>
         </div>
       </section>

@@ -50,7 +50,7 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-slate-50 to-slate-100">
       <motion.div
-        className="w-full max-w-md overflow-hidden border shadow-lg bg-card rounded-2xl border-border relative"
+        className="relative w-full max-w-md overflow-hidden border shadow-lg bg-card rounded-2xl border-border"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -58,21 +58,22 @@ export default function LoginPage() {
         {/* Back button */}
         <Link
           href="/landing"
-          className="absolute top-4 left-4 flex items-center p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors z-10 shadow-sm"
+          className="absolute z-10 flex items-center p-2 transition-colors bg-white border border-gray-200 rounded-lg shadow-sm top-4 left-4 hover:bg-gray-50"
           aria-label="Kembali ke halaman utama"
         >
-          <ChevronLeftIcon className="h-5 w-5 text-primary-600 mr-1" />
-          <span className="text-primary-600 text-sm font-medium">Kembali</span>
+          <ChevronLeftIcon className="w-5 h-5 mr-1 text-primary-600" />
+          <span className="text-sm font-medium text-primary-600">Kembali</span>
         </Link>
 
         {/* Header with logo */}
         <div className="p-8 text-center bg-gradient-to-r from-primary to-indigo-600">
           <div className="flex justify-center mb-4">
-            <div className="bg-white/20 backdrop-blur-sm p-4 rounded-full shadow-lg border border-white/30">
-              <BookOpenIcon className="h-14 w-14 text-white" />
+            <div className="p-4 border rounded-full shadow-lg bg-white/20 backdrop-blur-sm border-white/30">
+              <BookOpenIcon className="text-white h-14 w-14" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-white">Sistem Peminjaman Buku</h1>
+          <h1 className="text-2xl font-bold text-white">Sanbook</h1>
+          {/* <h1 className="text-2xl font-bold text-white">Sistem Peminjaman Buku</h1> */}
           <p className="mt-2 text-white/90">Masuk ke akun Anda</p>
         </div>
 
@@ -158,7 +159,7 @@ export default function LoginPage() {
               </span>
             ) : (
               <span className="flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
                 Masuk
