@@ -141,12 +141,12 @@ const AdminDashboard = () => {
             if (reportedQty > displayQty)
               qtyText += ` (dilaporkan ${reportedQty})`;
             activityText =
-              `Siswa ${transaction.user_name} meminjam buku: ${transaction.book_title || "Buku"}` +
+              `Siswa bernama ${transaction.user_name} meminjam buku: ${transaction.book_title || "Buku"}` +
               qtyText;
             icon = BookOpenIcon;
             color = "blue";
           } else if (transaction.status === "returned") {
-            activityText = `Siswa ${transaction.user_name} mengembalikan buku: ${transaction.book_title || "Buku"}`;
+            activityText = `Siswa bernama ${transaction.user_name} mengembalikan buku: ${transaction.book_title || "Buku"}`;
             icon = ArrowPathIcon;
             color = "green";
           } else if (transaction.status === "pending") {
@@ -158,7 +158,7 @@ const AdminDashboard = () => {
               transaction.fine_amount > 0
                 ? `Rp ${Number(transaction.fine_amount).toLocaleString("id-ID")}`
                 : "Rp 0";
-            activityText = ` Siswa ${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || "Buku"} (Denda: ${fineAmount})`;
+            activityText = ` Siswa bernama ${transaction.user_name} terlambat mengembalikan buku: ${transaction.book_title || "Buku"} (Denda: ${fineAmount})`;
             icon = ExclamationTriangleIcon;
             color = "red";
           } else if (transaction.status === "rejected") {
